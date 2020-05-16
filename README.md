@@ -1,3 +1,8 @@
+[![PyPI version](https://img.shields.io/pypi/v/pytience.svg)](https://pypi.org/project/pytience)
+[![Build Status](https://travis-ci.org/jamesboehmer/pytience.svg?branch=master)](https://travis-ci.org/jamesboehmer/pytience)
+[![codecov](https://codecov.io/gh/jamesboehmer/pytience/branch/master/graph/badge.svg)](https://codecov.io/gh/jamesboehmer/pytience)
+[![License](https://img.shields.io/badge/license-GPLv3.0+-blue)](https://opensource.org/licenses/GPL-3.0)
+
 # Pytience - A Collection of Patience Solitaire Games in Python
 
 This project aims to be a small collection of console solitaire card games built on a common framework. The first such 
