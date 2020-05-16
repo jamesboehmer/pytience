@@ -1,0 +1,7 @@
+[paths]
+source =
+    pytience/
+
+[report]
+include =
+	pytience/*

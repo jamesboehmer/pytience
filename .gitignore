@@ -1,0 +1,8 @@
+.idea
+.python-version
+.tox
+**/*.egg-info
+**/build
+**/dist
+**/.coverage
+**/.reports
