@@ -1,11 +1,16 @@
 from unittest import TestCase
 
-from pytience.games.solitaire.klondike import KlondikeGame  # pylint: disable=unused-import
+from pytience.games.solitaire.klondike import KlondikeGame
 
 
 class KlondikeGameTestCase(TestCase):
     def test_create(self):
-        pass  # TODO: implement
+        klondike = KlondikeGame()
+        self.assertTrue(klondike.stock.is_shuffled, "The klondike deck should be shuffled.")
+        self.assertEqual(len(klondike.stock), 24, "Klondike starting stock should have 24 cards remaining.")
+        self.assertEqual(len(klondike.waste), 0, "Klondike starting waste should be empty.")
+        self.assertEqual(klondike.score, 0, "Klondike starting score should be 0.")
+        self.assertEqual(len(klondike.foundation.piles), 4, "Klondike foundation should have 4 piles.")
 
     def test_deal(self):
         pass  # TODO: implement
@@ -27,4 +32,3 @@ class KlondikeGameTestCase(TestCase):
 
     def test_undo(self):
         pass  # TODO: implement
-
