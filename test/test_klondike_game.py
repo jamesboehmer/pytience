@@ -113,6 +113,16 @@ class KlondikeGameTestCase(TestCase):
                          "There should still be 3 cards in the foundation.")
         self.assertEqual(len(klondike.undo_stack), 3, "There should still be 3 undo events.")
 
+    def test_adjust_score(self):
+        klondike = KlondikeGame()
+        self.assertEqual(klondike.score, 0, "Starting score should be 0")
+
+        klondike.adjust_score(37)
+        self.assertEqual(klondike.score, 37, "The score should now be 37")
+
+        klondike.adjust_score(-19)
+        self.assertEqual(klondike.score, 18, "The score should now be 18")
+
     def test_tableau_move(self):
         pass  # TODO: implement
 
