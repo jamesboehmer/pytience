@@ -16,8 +16,7 @@ POINTS_TABLEAU_FOUNDATION = 15
 
 class KlondikeGame(Undoable):
     def __init__(self):
-        self.stock: Deck = Deck()
-        self.stock.shuffle()  # TODO: make this a continuation
+        self.stock: Deck = Deck().shuffle()
         self.tableau: Tableau = Tableau(7, self.stock)
         self.waste: List[Card] = []
         self.score = 0
