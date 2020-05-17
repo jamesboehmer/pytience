@@ -116,12 +116,15 @@ class KlondikeGameTestCase(TestCase):
     def test_adjust_score(self):
         klondike = KlondikeGame()
         self.assertEqual(klondike.score, 0, "Starting score should be 0")
+        self.assertEqual(len(klondike.undo_stack), 0, "Starting undo_stack should be empty.")
 
         klondike.adjust_score(37)
         self.assertEqual(klondike.score, 37, "The score should now be 37")
+        self.assertEqual(len(klondike.undo_stack), 0, "Undo_stack should still be empty.")
 
         klondike.adjust_score(-19)
         self.assertEqual(klondike.score, 18, "The score should now be 18")
+        self.assertEqual(len(klondike.undo_stack), 0, "Undo_stack should still be empty.")
 
     def test_tableau_move(self):
         pass  # TODO: implement
