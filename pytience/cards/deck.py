@@ -34,15 +34,15 @@ class Suit(Enum):
 
 class Pip(Enum):
     Ace = 'A'
-    Two = 2
-    Three = 3
-    Four = 4
-    Five = 5
-    Six = 6
-    Seven = 7
-    Eight = 8
-    Nine = 9
-    Ten = 10
+    Two = '2'
+    Three = '3'
+    Four = '4'
+    Five = '5'
+    Six = '6'
+    Seven = '7'
+    Eight = '8'
+    Nine = '9'
+    Ten = '10'
     Jack = 'J'
     Queen = 'Q'
     King = 'K'
@@ -87,6 +87,17 @@ class Card:
         if self.is_concealed:
             return '#'
         return repr(self)
+
+    @classmethod
+    def parse_card(cls, card_string) -> 'Card':
+        """
+        Converts a card string, e.g. "10♣" to a Card(Pip.Ten, Suit.Cubs)
+        :param card_string: The string representing the card
+        :return: new Card object
+        """
+        suit = Suit(card_string[-1])
+        pip = Pip(card_string[:-1])
+        return Card(pip, suit)
 
 
 class Deck:
