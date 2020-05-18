@@ -161,3 +161,7 @@ Using `help` or `?`, you can see all of the above commands, their syntax, and th
 ### Quit
 
 Quit the game using `quit`, `q`, or `ctrl-d`.
+
+### Seeing the game state
+
+The only undocumented command is `_state` (new in v0.0.2).  Use it to see a JSON representation of the game state.
