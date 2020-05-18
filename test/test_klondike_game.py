@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import patch
 
 from pytience.games.solitaire.klondike import KlondikeGame
 from pytience.cards.deck import Card, Pip, Suit
@@ -54,6 +55,7 @@ class KlondikeGameTestCase(TestCase):
         self.assertEqual(len(klondike.undo_stack), 25, "Klondike undo stack should still have 25 events.")
 
     def test_seek_tableau_to_foundation(self):
+        # TODO: check for score adjustments
         klondike = KlondikeGame()
         # force a situation with multiple aces and a matching two.  Place the card below it too so it doesn't become
         # a foundation candidate after it's revealed
@@ -126,11 +128,50 @@ class KlondikeGameTestCase(TestCase):
         self.assertEqual(klondike.score, 18, "The score should now be 18")
         self.assertEqual(len(klondike.undo_stack), 0, "Undo_stack should still be empty.")
 
-    def test_tableau_move(self):
+    def test_select_tableau_no_pile_num(self):
+        # 1 No pile_num, no foundation candidate in the tableau - should raise exception
+
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise exception when there are no args and no foundation candidates."):
+            klondike.select_tableau()
+
+        # 2 No pile_num, foundation candidate exists in the tableau.
+        klondike.tableau.piles[3][-1] = Card.parse_card("A♣")
+
+        with patch('pytience.games.solitaire.klondike.KlondikeGame.seek_tableau_to_foundation') as mock_method:
+            klondike.select_tableau()
+            mock_method.assert_called_once()
+
+    def test_select_tableau_invalid_piles(self):
+        # pile_num == destination_pile_num - should raise exception
+
+        # invalid pile_num - raise exception
+
+        # valid pile_num, invalid card_num
+
+        # valid pile_num, valid single card_num, invalid destination
+
         pass  # TODO: implement
 
-    def test_tableau_to_foundation(self):
-        pass  # TODO: implement
+    def test_select_tableau_no_destination(self):
+
+        # valid pile_num, valid single card_num, no destination, foundation fit
+
+        # valid pile_num, valid single card_num, no destination, no foundation fit, tableau fit
+
+        # valid pile_num, valid single card_num, no destination, no foundation fit, no tableau fit - exception
+        pass
+
+    def test_select_Tableau_valid_destination(self):
+
+        # valid pile_num, valid single card_num, valid destination, no tableau fit - exception
+
+        # valid pile_num, valid single card_num, valid destination, tableau fit
+        pass
 
     def test_waste_to_tableau(self):
         pass  # TODO: implement

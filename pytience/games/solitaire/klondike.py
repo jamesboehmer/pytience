@@ -138,6 +138,7 @@ class KlondikeGame(Undoable):
     def select_tableau(self, pile_num: int = None, card_num: int = None, destination_pile_num: int = None):
         if pile_num is None:
             self.seek_tableau_to_foundation()
+            return
         else:
             # Instead of seeking a foundation pile
             if pile_num == destination_pile_num:
