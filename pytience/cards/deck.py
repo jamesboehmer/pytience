@@ -81,7 +81,7 @@ class Card:
         if self.pip is None:
             return '*'
         else:
-            return '{}{}'.format(self.pip.value, self.suit.value)
+            return '{}{}{}'.format('|' if self.is_concealed else '', self.pip.value, self.suit.value)
 
     def __str__(self):
         if self.is_concealed:
@@ -96,8 +96,12 @@ class Card:
         :return: new Card object
         """
         suit = Suit(card_string[-1])
-        pip = Pip(card_string[:-1])
-        return Card(pip, suit)
+        if card_string[0] == '|':
+            pip = Pip(card_string[1:-1])
+            return Card(pip, suit)
+        else:
+            pip = Pip(card_string[:-1])
+            return Card(pip, suit).reveal()
 
 
 class Deck:
