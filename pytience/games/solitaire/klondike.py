@@ -198,3 +198,27 @@ class KlondikeGame(Undoable):
 
         if not self.is_solved():
             self.seek_tableau_to_foundation()
+
+    @property
+    def state(self):
+        return {
+            "score": self.score,
+            "stock": {
+                "num_decks": self.stock.num_decks,
+                "num_jokers": self.stock.num_jokers,
+                "is_shuffled": self.stock.is_shuffled,
+                "cards": list(map(repr, self.stock.cards))
+            },
+            "waste": list(map(str, self.waste)),
+            "foundation": {
+                "piles": {str(suit): list(map(repr, pile)) for suit, pile in self.foundation.piles.items()},
+                "undo_stack": None  # TODO: implement undo_stack serialization
+            },
+            "tableau": {
+                "piles": [
+                    list(map(repr, pile))
+                    for pile in self.tableau.piles
+                ],
+                "undo_stack": None  # TODO: implement undo_stack serialization
+            }
+        }
