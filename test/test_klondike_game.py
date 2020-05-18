@@ -222,11 +222,21 @@ class KlondikeGameTestCase(TestCase):
         self.assertEqual(len(klondike.tableau.piles[0]), 3, "There should now be exactly 3 cards in pile 0.")
 
     def test_select_Tableau_valid_destination(self):
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
 
         # valid pile_num, valid single card_num, valid destination, no tableau fit - exception
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise an exception when the card doesn't fit the destination."):
+            klondike.select_tableau(5, 5, 0)
 
         # valid pile_num, valid single card_num, valid destination, tableau fit
-        pass  # TODO: implement
+        self.assertEqual(len(klondike.tableau.piles[1]), 2, "There should be exactly 2 cards in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 1, "There should be exactly 1 card in pile 0.")
+        klondike.select_tableau(1, 1, 0)
+        self.assertEqual(len(klondike.tableau.piles[1]), 1, "There should now be exactly 1 card left in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 2, "There should now be exactly 2 cards in pile 0.")
 
     def test_waste_to_tableau(self):
         pass  # TODO: implement
