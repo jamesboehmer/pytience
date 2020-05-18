@@ -4,6 +4,8 @@ from unittest.mock import patch
 from pytience.games.solitaire.klondike import KlondikeGame
 from pytience.cards.deck import Card, Pip, Suit
 from pytience.games.exception import IllegalMoveException
+from pytience.cards.exception import NoCardsRemainingException
+from pytience.games.solitaire.exception import NoSuchSuitException, TableauPileIndexError
 
 
 class KlondikeGameTestCase(TestCase):
@@ -293,8 +295,62 @@ class KlondikeGameTestCase(TestCase):
         with self.assertRaises(IllegalMoveException, msg="Should raise an exception when the waste is empty."):
             klondike.select_waste()
 
-    def test_foundation_to_tableau(self):
-        pass  # TODO: implement
+    def test_select_foundation_with_destination(self):
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+
+        # empty pile - raise exception
+        with self.assertRaises(NoCardsRemainingException, msg="Should raise exception when foundation pile is empty."):
+            klondike.select_foundation(Suit.Hearts, 3)
+
+        # invalid pile - raise exception
+        with self.assertRaises(NoSuchSuitException, msg="Should raise exception when suit is invalid."):
+            klondike.select_foundation(None, 3)
+
+        # valid pile, invalid destination
+        klondike.foundation.piles[Suit.Hearts].append(Card.parse_card("5♥"))
+        with self.assertRaises(TableauPileIndexError, msg="Should raise exception when destination pile doesn't exist."):
+            klondike.select_foundation(Suit.Hearts, 7)
+
+        # valid pile, valid destination, no fit - raise exception
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise exception when the card doesn't fit the destination."):
+            klondike.select_foundation(Suit.Hearts, 4)
+
+        # valid pile, valid destination with fit
+        self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 1, "Heart foundation pile should have 1 card.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 4, "Tableau pile 3 should have 4 cards.")
+        klondike.select_foundation(Suit.Hearts, 3)
+        self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 0, "Heart foundation pile should now be empty.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 5, "Tableau pile 3 should now have 5 cards.")
+
+    def test_select_foundation_without_destination(self):
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+
+        # empty pile - raise exception
+        with self.assertRaises(NoCardsRemainingException, msg="Should raise exception when foundation pile is empty."):
+            klondike.select_foundation(Suit.Hearts)
+
+        # invalid pile - raise exception
+        with self.assertRaises(NoSuchSuitException, msg="Should raise exception when suit is invalid."):
+            klondike.select_foundation(None)
+
+        # valid pile, no fit - raise exception
+        klondike.foundation.piles[Suit.Hearts].append(Card.parse_card("5♣"))
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise exception when the card doesn't fit the destination."):
+            klondike.select_foundation(Suit.Hearts)
+
+        # valid pile with fit
+        klondike.foundation.piles[Suit.Hearts][-1] = Card.parse_card("5♥")
+        self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 1, "Heart pile should have 1 card.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 4, "Pile 3 should have 4 cards.")
+        klondike.select_foundation(Suit.Hearts, 3)
+        self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 0, "Heart foundation pile should now be empty.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 5, "Tableau pile 3 should now have 5 cards.")
 
     def test_undo(self):
         pass  # TODO: implement
