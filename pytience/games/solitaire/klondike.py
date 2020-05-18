@@ -6,7 +6,7 @@ from pytience.games.solitaire.foundation import Foundation
 from pytience.games.solitaire.tableau import Tableau
 from pytience.games.util import Undoable
 from pytience.games.solitaire.exception import IllegalMoveException, IllegalTableauMoveException, \
-    IllegalFoundationMoveException
+    IllegalFoundationMoveException, TableauPileIndexError
 from pytience.cards.exception import NoCardsRemainingException
 
 POINTS_WASTE_FOUNDATION = 10
@@ -68,6 +68,9 @@ class KlondikeGame(Undoable):
                     partial(self.adjust_score, POINTS_TABLEAU_FOUNDATION)
                 ])
                 return
+            except TableauPileIndexError as e:
+                self.foundation.undo()
+                raise e
             except IllegalTableauMoveException:
                 pass
 
