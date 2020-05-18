@@ -1,7 +1,8 @@
 from collections import Counter
+from itertools import product
 from unittest import TestCase
 
-from pytience.cards.deck import Deck, Pip, Suit, Color
+from pytience.cards.deck import Deck, Pip, Suit, Color, Card
 from pytience.cards.exception import NoCardsRemainingException
 
 
@@ -149,3 +150,10 @@ class DeckTestCase(TestCase):
         self.assertEqual(str(Pip.Jack), 'J')
         self.assertEqual(str(Pip.Queen), 'Q')
         self.assertEqual(str(Pip.King), 'K')
+
+    def test_parse_card(self):
+        for (suit, pip) in product(Suit, Pip):
+            card_string = '{}{}'.format(pip.value, suit.value)
+            card = Card.parse_card(card_string)
+            self.assertEqual(card.pip, pip, "The parsed card should have the correct pip.")
+            self.assertEqual(card.suit, suit, "The parsed card should have the correct suit.")

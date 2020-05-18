@@ -26,6 +26,8 @@ class Tableau(Undoable):
     def put(self, cards: List[Card], pile_num: int) -> NoReturn:
         if cards[0].is_concealed:
             raise ConcealedCardNotAllowedException('Concealed cards may not be built on the tableau.')
+        if pile_num > len(self.piles) - 1:
+            raise TableauPileIndexError('No such tableau pile: {}'.format(pile_num))
         pile = self.piles[pile_num]
         if not pile:
             if cards[0].pip == Pip.King:
@@ -46,6 +48,8 @@ class Tableau(Undoable):
             ])
 
     def get(self, pile_num: int, card_num: int) -> List[Card]:
+        if card_num is None:
+            raise TableauCardIndexError('Card num not specified')
         if pile_num > len(self.piles) - 1:
             raise TableauPileIndexError('No such tableau pile: {}'.format(pile_num))
         pile = self.piles[pile_num]

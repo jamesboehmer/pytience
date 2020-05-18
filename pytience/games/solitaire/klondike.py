@@ -6,7 +6,7 @@ from pytience.games.solitaire.foundation import Foundation
 from pytience.games.solitaire.tableau import Tableau
 from pytience.games.util import Undoable
 from pytience.games.solitaire.exception import IllegalMoveException, IllegalTableauMoveException, \
-    IllegalFoundationMoveException
+    IllegalFoundationMoveException, TableauPileIndexError
 from pytience.cards.exception import NoCardsRemainingException
 
 POINTS_WASTE_FOUNDATION = 10
@@ -16,8 +16,7 @@ POINTS_TABLEAU_FOUNDATION = 15
 
 class KlondikeGame(Undoable):
     def __init__(self):
-        self.stock: Deck = Deck()
-        self.stock.shuffle()  # TODO: make this a continuation
+        self.stock: Deck = Deck().shuffle()
         self.tableau: Tableau = Tableau(7, self.stock)
         self.waste: List[Card] = []
         self.score = 0
@@ -69,6 +68,9 @@ class KlondikeGame(Undoable):
                     partial(self.adjust_score, POINTS_TABLEAU_FOUNDATION)
                 ])
                 return
+            except TableauPileIndexError as e:
+                self.foundation.undo()
+                raise e
             except IllegalTableauMoveException:
                 pass
 
@@ -139,6 +141,7 @@ class KlondikeGame(Undoable):
     def select_tableau(self, pile_num: int = None, card_num: int = None, destination_pile_num: int = None):
         if pile_num is None:
             self.seek_tableau_to_foundation()
+            return
         else:
             # Instead of seeking a foundation pile
             if pile_num == destination_pile_num:
@@ -199,3 +202,27 @@ class KlondikeGame(Undoable):
 
         if not self.is_solved():
             self.seek_tableau_to_foundation()
+
+    @property
+    def state(self):
+        return {
+            "score": self.score,
+            "stock": {
+                "num_decks": self.stock.num_decks,
+                "num_jokers": self.stock.num_jokers,
+                "is_shuffled": self.stock.is_shuffled,
+                "cards": list(map(repr, self.stock.cards))
+            },
+            "waste": list(map(str, self.waste)),
+            "foundation": {
+                "piles": {str(suit): list(map(repr, pile)) for suit, pile in self.foundation.piles.items()},
+                "undo_stack": None  # TODO: implement undo_stack serialization
+            },
+            "tableau": {
+                "piles": [
+                    list(map(repr, pile))
+                    for pile in self.tableau.piles
+                ],
+                "undo_stack": None  # TODO: implement undo_stack serialization
+            }
+        }

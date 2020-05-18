@@ -3,6 +3,7 @@ from functools import wraps
 from io import StringIO
 from itertools import zip_longest
 from pathlib import Path
+import json
 
 import dill
 from colorama import Style, Fore, Back
@@ -173,6 +174,15 @@ class KlondikeCmd(Cmd):
 
     def default(self, line):
         cmd, arg, line = self.parseline(line)
+        if cmd == "_state":
+            print("\033[H\033[J")  # Clear screen
+            self.print_state()
+            print("Press return to continue...")
+            try:
+                input()
+            except EOFError:
+                pass
+            return False
         try:
             # if there are 1-3 integer args, assume they're tableau args
             _args = line.split()[:3]
@@ -184,6 +194,9 @@ class KlondikeCmd(Cmd):
             return self.aliases[cmd](arg)
         else:
             self.errors.append(Exception("*** Unknown syntax: {} ***".format(line)))
+
+    def print_state(self):
+        print(json.dumps(self.klondike.state, indent=2, ensure_ascii=False))
 
     def print_game(self):
         def _paint_suit(_suit):
