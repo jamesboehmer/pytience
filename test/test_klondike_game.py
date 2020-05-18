@@ -238,11 +238,60 @@ class KlondikeGameTestCase(TestCase):
         self.assertEqual(len(klondike.tableau.piles[1]), 1, "There should now be exactly 1 card left in pile 1.")
         self.assertEqual(len(klondike.tableau.piles[0]), 2, "There should now be exactly 2 cards in pile 0.")
 
-    def test_waste_to_tableau(self):
-        pass  # TODO: implement
+    def test_select_waste_with_tableau_destination(self):
+        # no cards in waste - raise exception
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
 
-    def test_waste_to_foundation(self):
-        pass  # TODO: implement
+        with self.assertRaises(IllegalMoveException, msg="Should raise an exception when the waste is empty."):
+            klondike.select_waste(0)
+
+        # card in waste doesn't fit in destination - raise exception
+        klondike.waste.append(Card.parse_card("K♠"))
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise an exception when the waste card won't fit in the tableau."):
+            klondike.select_waste(0)
+
+        # card in waste fits in destination
+        klondike.tableau.piles[0].clear()
+        self.assertEqual(len(klondike.waste), 1, "Waste should have 1 card.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 0, "Tableau pile 0 should be empty.")
+        klondike.select_waste(0)
+        self.assertEqual(len(klondike.waste), 0, "Waste should now have 0 cards.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 1, "Tableau pile 0 should now have 1 card.")
+
+    def test_select_waste_without_tableau_destination(self):
+        klondike = KlondikeGame()
+
+        # If there's a fit in the foundation AND the tableau, the waste card should go to the foundation
+        klondike.waste.append(Card.parse_card("A♠"))
+        self.assertEqual(len(klondike.waste), 1, "Waste should have 1 card.")
+        self.assertEqual(len(klondike.foundation.piles[Suit.Spades]), 0, "Foundation spade pile should be empty.")
+        klondike.select_waste()
+        self.assertEqual(len(klondike.waste), 0, "Waste should now have 0 cards left.")
+        self.assertEqual(len(klondike.foundation.piles[Suit.Spades]), 1,
+                         "Foundation spade pile should now have 1 card.")
+
+        # If there's no foundation fit, but there's a tableau fit, it should find the right tableau pile
+        klondike.waste.append(Card.parse_card("9♣"))
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+        self.assertEqual(len(klondike.waste), 1, "Waste should have 1 card.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 1, "Tableau pile 0 should have 1 card.")
+        klondike.select_waste()
+        self.assertEqual(len(klondike.waste), 0, "Waste should now have 0 cards.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 2, "Tableau pile 0 should now have 2 cards.")
+
+        # If there's no foundation fit and no tableau fit, raise exception
+        klondike.waste.append(Card.parse_card("K♥"))
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception when there's no fit anywhere."):
+            klondike.select_waste()
+
+        # If the waste is empty, raise exception
+        klondike.waste.clear()
+        with self.assertRaises(IllegalMoveException, msg="Should raise an exception when the waste is empty."):
+            klondike.select_waste()
 
     def test_foundation_to_tableau(self):
         pass  # TODO: implement
