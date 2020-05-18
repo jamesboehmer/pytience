@@ -1,5 +1,6 @@
 from unittest import TestCase
 from unittest.mock import patch
+import itertools
 
 from pytience.games.solitaire.klondike import KlondikeGame
 from pytience.cards.deck import Card, Pip, Suit
@@ -310,7 +311,8 @@ class KlondikeGameTestCase(TestCase):
 
         # valid pile, invalid destination
         klondike.foundation.piles[Suit.Hearts].append(Card.parse_card("5♥"))
-        with self.assertRaises(TableauPileIndexError, msg="Should raise exception when destination pile doesn't exist."):
+        with self.assertRaises(TableauPileIndexError,
+                               msg="Should raise exception when destination pile doesn't exist."):
             klondike.select_foundation(Suit.Hearts, 7)
 
         # valid pile, valid destination, no fit - raise exception
@@ -351,6 +353,71 @@ class KlondikeGameTestCase(TestCase):
         klondike.select_foundation(Suit.Hearts, 3)
         self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 0, "Heart foundation pile should now be empty.")
         self.assertEqual(len(klondike.tableau.piles[3]), 5, "Tableau pile 3 should now have 5 cards.")
+
+    def test_is_solvable(self):
+        klondike = KlondikeGame()
+
+        # remaining stock cards - false
+        self.assertFalse(klondike.is_solvable(), "Game should not be solvable with stock cards remaining")
+
+        # remaining waste cards - false
+        klondike.deal()
+        klondike.stock.cards.clear()
+        self.assertFalse(klondike.is_solvable(), "Game should not be solvable with waste cards remaining")
+
+        # concealed cards in the tableau - false
+        klondike.waste.clear()
+        self.assertFalse(klondike.is_solvable(), "Game should not be solvable with waste cards remaining")
+
+        # all tableau cards revealed = true
+        for c in itertools.chain.from_iterable(klondike.tableau.piles):
+            c.reveal()
+
+        self.assertTrue(klondike.is_solvable(),
+                        "Game should be solvable with stock and waste empty and the tableau revealed.")
+
+    def test_is_solved(self):
+        klondike = KlondikeGame()
+        self.assertLess(sum(len(p) for p in klondike.foundation.piles.values()), 52,
+                        "There should be fewer than 52 cards in the foundation.")
+        self.assertFalse(klondike.is_solved(), "Game should not be solved when the foundation isn't full.")
+        for pile in klondike.foundation.piles.values():
+            pile.extend(Card(None, None) for _ in range(13))
+        self.assertEqual(sum(len(p) for p in klondike.foundation.piles.values()), 52,
+                         "There should be exactly 52 cards in the foundation.")
+        self.assertTrue(klondike.is_solved(), "Game should be considered solved when the foundation is full.")
+
+    def test_solve(self):
+        klondike = KlondikeGame()
+        # not solvable - raise exception
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if not solvable."):
+            klondike.solve()
+
+        # Set the tableau up with all revealed cards in perfect solution order
+        klondike.stock.cards.clear()
+        klondike.tableau.piles = [[] for _ in range(7)]
+        suits = [Suit.Hearts, Suit.Clubs, Suit.Diamonds, Suit.Spades]  # R/B/R/B
+        for pip in [Pip.King, Pip.Queen, Pip.Jack, Pip.Ten, Pip.Nine, Pip.Eight, Pip.Seven, Pip.Six, Pip.Five, Pip.Four,
+                    Pip.Three, Pip.Two, Pip.Ace]:
+            for pile_num, suit in enumerate(suits):
+                klondike.tableau.piles[pile_num].append(Card(pip, suit).reveal())
+            suits = suits[-1:] + suits[:-1]  # rotate so the colors alternate
+
+        # solvable - cards should shift from tableau to foundation
+        self.assertTrue(klondike.is_solvable(),
+                        "Game should be solvable with stock and waste empty and the tableau revealed.")
+
+        self.assertFalse(klondike.foundation.is_full, "Foundation should be empty.")
+
+        for _ in range(52):
+            klondike.solve()
+
+        self.assertTrue(klondike.foundation.is_full, "Foundation should be full.")
+
+    def test_state(self):
+        klondike = KlondikeGame()
+        state = klondike.state
+        self.assertIsInstance(state, dict, "Klondike state should be a dict.")
 
     def test_undo(self):
         pass  # TODO: implement
