@@ -147,15 +147,32 @@ class KlondikeGameTestCase(TestCase):
             mock_method.assert_called_once()
 
     def test_select_tableau_invalid_piles(self):
+        klondike = KlondikeGame()
         # pile_num == destination_pile_num - should raise exception
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if pile_num==destination_pile_num."):
+            klondike.select_tableau(pile_num=0, destination_pile_num=0)
+
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if pile_num==destination_pile_num."):
+            klondike.select_tableau(pile_num=0, card_num=-100, destination_pile_num=0)
 
         # invalid pile_num - raise exception
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if pile_num doesn't exist."):
+            klondike.select_tableau(pile_num=-1)
 
         # valid pile_num, invalid card_num
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise exception if card_num isn't passed with pile_num."):
+            klondike.select_tableau(pile_num=0)
+
+        klondike.tableau.piles[0].pop()
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if card_num is invalid."):
+            klondike.select_tableau(pile_num=0, card_num=0)
 
         # valid pile_num, valid single card_num, invalid destination
-
-        pass  # TODO: implement
+        klondike.tableau.piles[0].append(Card.parse_card("10♦"))
+        klondike.tableau.piles[1][-1] = Card.parse_card("9♠")
+        with self.assertRaises(IllegalMoveException, msg="Should raise exception if destination is invalid."):
+            klondike.select_tableau(pile_num=0, card_num=0, destination_pile_num=1)
 
     def test_select_tableau_no_destination(self):
 
@@ -164,14 +181,17 @@ class KlondikeGameTestCase(TestCase):
         # valid pile_num, valid single card_num, no destination, no foundation fit, tableau fit
 
         # valid pile_num, valid single card_num, no destination, no foundation fit, no tableau fit - exception
-        pass
+
+        # valid pile_num, valid multi card_num, no destination, tableau fit
+
+        pass  # TODO: implement
 
     def test_select_Tableau_valid_destination(self):
 
         # valid pile_num, valid single card_num, valid destination, no tableau fit - exception
 
         # valid pile_num, valid single card_num, valid destination, tableau fit
-        pass
+        pass  # TODO: implement
 
     def test_waste_to_tableau(self):
         pass  # TODO: implement
