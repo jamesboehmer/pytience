@@ -175,16 +175,51 @@ class KlondikeGameTestCase(TestCase):
             klondike.select_tableau(pile_num=0, card_num=0, destination_pile_num=1)
 
     def test_select_tableau_no_destination(self):
-
-        # valid pile_num, valid single card_num, no destination, foundation fit
-
-        # valid pile_num, valid single card_num, no destination, no foundation fit, tableau fit
-
+        klondike = KlondikeGame()
         # valid pile_num, valid single card_num, no destination, no foundation fit, no tableau fit - exception
 
-        # valid pile_num, valid multi card_num, no destination, tableau fit
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
 
-        pass  # TODO: implement
+        with self.assertRaises(IllegalMoveException,
+                               msg="Should raise exception when there's no destination specified and no fit."):
+            klondike.select_tableau(3, -1)
+
+        # valid pile_num, valid single card_num, no destination, foundation fit
+        klondike.foundation.piles[Suit.Clubs].append(Card.parse_card("5♣"))
+        self.assertEqual(len(klondike.foundation.piles[Suit.Clubs]), 1,
+                         "There should be exactly 1 card in the club foundation pile.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 4, "There should now be exactly 4 cards in pile 3.")
+        klondike.select_tableau(3, -1)
+        self.assertEqual(len(klondike.foundation.piles[Suit.Clubs]), 2,
+                         "There should be exactly 2 cards in the club foundation pile.")
+        self.assertEqual(len(klondike.tableau.piles[3]), 3, "There should now be exactly 3 cards left in pile 3.")
+
+        # valid pile_num, valid single card_num, no destination, no foundation fit, tableau fit
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "9♠", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+        self.assertEqual(sum(len(p) for p in klondike.foundation.piles.values()), 0,
+                         "There should be no cards in the foundation.")
+        self.assertEqual(len(klondike.tableau.piles[1]), 2, "There should be exactly 2 cards in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 1, "There should be exactly 1 card in pile 0.")
+        klondike.select_tableau(1, 1)
+        self.assertEqual(sum(len(p) for p in klondike.foundation.piles.values()), 0,
+                         "There should still be exactly 0 cards in the foundation.")
+        self.assertEqual(len(klondike.tableau.piles[1]), 1, "There should now be exactly 1 card left in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 2, "There should now be exactly 2 cards in pile 0.")
+
+        # valid pile_num, valid multi card_num, no destination, tableau fit
+        klondike = KlondikeGame()
+        for pile_num, card in enumerate(["10♦", "8♥", "J♦", "6♣", "3♦", "9♥", "2♦"]):
+            klondike.tableau.piles[pile_num][-1] = Card.parse_card(card)
+        klondike.tableau.piles[1][0] = Card.parse_card("9♠")
+
+        self.assertEqual(len(klondike.tableau.piles[1]), 2, "There should be exactly 2 cards in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 1, "There should be exactly 1 card in pile 0.")
+        klondike.select_tableau(1, 0)
+        self.assertEqual(len(klondike.tableau.piles[1]), 0, "There should now be exactly 0 cards left in pile 1.")
+        self.assertEqual(len(klondike.tableau.piles[0]), 3, "There should now be exactly 3 cards in pile 0.")
 
     def test_select_Tableau_valid_destination(self):
 
