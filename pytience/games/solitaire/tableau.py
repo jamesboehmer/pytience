@@ -23,6 +23,11 @@ class Tableau(Undoable):
 
         super().__init__()
 
+    def undo_put(self, pile_num: int, num_cards: int):
+        pile = self.piles[pile_num]
+        for _ in range(num_cards):
+            pile.pop()
+
     def put(self, cards: List[Card], pile_num: int) -> NoReturn:
         if cards[0].is_concealed:
             raise ConcealedCardNotAllowedException('Concealed cards may not be built on the tableau.')
@@ -32,9 +37,7 @@ class Tableau(Undoable):
         if not pile:
             if cards[0].pip == Pip.King:
                 pile.extend(cards)
-                self.undo_stack.append([
-                    partial(lambda _pile, n: [_pile.pop() for _ in range(n)], pile, len(cards))
-                ])
+                self.undo_stack.append([partial(self.undo_put, pile_num, len(cards))])
                 return
             else:
                 raise IllegalTableauBuildOrderException('Only Kings may be built on empty tableau piles.')
@@ -43,9 +46,12 @@ class Tableau(Undoable):
                 'Tableau cards must be built in descending order with alternate colors')
         else:
             pile.extend(cards)
-            self.undo_stack.append([
-                partial(lambda _pile, n: [_pile.pop() for _ in range(n)], pile, len(cards))
-            ])
+            self.undo_stack.append([partial(self.undo_put, pile_num, len(cards))])
+
+    def undo_get(self, pile_num: int, card_strings: List[str], re_conceal: bool):
+        if re_conceal:
+            self._conceal(pile_num)
+        self.piles[pile_num].extend(map(Card.parse_card, card_strings))
 
     def get(self, pile_num: int, card_num: int) -> List[Card]:
         if card_num is None:
@@ -64,10 +70,7 @@ class Tableau(Undoable):
         for _ in range(len(cards)):
             pile.pop()
         revealed = self._reveal(pile_num)
-        undo_log = [partial(lambda _pile, _cards: _pile.extend(_cards), self.piles[pile_num], cards.copy())]
-        if revealed:
-            undo_log.append(partial(self._conceal, pile_num))
-        self.undo_stack.append(undo_log)
+        self.undo_stack.append([partial(self.undo_get, pile_num, list(map(str, cards)), revealed)])
         return cards
 
     def _reveal(self, pile_num: int) -> bool:
