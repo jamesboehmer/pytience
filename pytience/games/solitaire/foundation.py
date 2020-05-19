@@ -17,6 +17,12 @@ class Foundation(Undoable):
         self.piles: Dict[Suit, List[Card]] = {suit: [] for suit in suits}
         super().__init__()
 
+    def undo_get(self, suit: str, card: str):
+        _suit = Suit(suit)
+        _card = Card.parse_card(card)
+        pile = self.piles.get(_suit)
+        pile.append(_card)
+
     def get(self, suit: Suit) -> Card:
         if suit not in self.piles:
             raise NoSuchSuitException('No such suit.')
@@ -26,9 +32,14 @@ class Foundation(Undoable):
 
         card = pile.pop()
         self.undo_stack.append([
-            partial(pile.append, card)
+            partial(self.undo_get, str(suit), str(card))
         ])
         return card
+
+    def undo_put(self, suit: str):
+        _suit = Suit(suit)
+        pile = self.piles.get(_suit)
+        pile.pop()
 
     def put(self, card: Card):
         undo_log = []
@@ -37,7 +48,7 @@ class Foundation(Undoable):
         pile = self.piles[card.suit]
         if card.pip == Pip.Ace:
             pile.append(card)
-            undo_log.append(partial(pile.pop))
+            undo_log.append(partial(self.undo_put, str(card.suit)))
         elif not pile:
             raise IllegalFoundationBuildOrderException('Foundation cards must be built sequentially per suit.')
         else:
@@ -46,7 +57,7 @@ class Foundation(Undoable):
             if value != top_value + 1:
                 raise IllegalFoundationBuildOrderException('Foundation cards must be build sequentially per suit.')
             pile.append(card)
-            undo_log.append(partial(pile.pop))
+            undo_log.append(partial(self.undo_put, str(card.suit)))
         if undo_log:
             self.undo_stack.append(undo_log)
 
