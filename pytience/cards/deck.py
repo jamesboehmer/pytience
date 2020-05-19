@@ -77,6 +77,9 @@ class Card:
         self.is_revealed = False
         return self
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
         state = '|' if self.is_concealed else ''
         if self.pip is None:
