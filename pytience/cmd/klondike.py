@@ -204,12 +204,13 @@ class KlondikeCmd(Cmd):
                                      Style.RESET_ALL)
 
         def _paint_card(_card: Card, left_pad: int = 0, right_pad: int = 0):
-            length = len(str(_card))
+            card_string = '#' if _card.is_concealed else str(_card)
+            length = len(card_string)
             left = ' ' * (left_pad - length)
             right = ' ' * (right_pad - length - len(left))
 
             if _card.is_concealed or _card.pip is None:
-                return '{}{}{}{}{}'.format(left, Style.BRIGHT, str(_card), Style.RESET_ALL, right)
+                return '{}{}{}{}{}'.format(left, Style.BRIGHT, str(card_string), Style.RESET_ALL, right)
 
             return '{}{}{}{}{}{}'.format(left, Style.BRIGHT, _card.pip.value, _paint_suit(_card.suit), Style.RESET_ALL,
                                          right)

@@ -77,31 +77,33 @@ class Card:
         self.is_revealed = False
         return self
 
-    def __repr__(self):
-        if self.pip is None:
-            return '*'
-        else:
-            return '{}{}{}'.format('|' if self.is_concealed else '', self.pip.value, self.suit.value)
-
     def __str__(self):
-        if self.is_concealed:
-            return '#'
-        return repr(self)
+        state = '|' if self.is_concealed else ''
+        if self.pip is None:
+            return '{}*'.format(state)
+        else:
+            return '{}{}{}'.format(state, self.pip.value, self.suit.value)
 
     @classmethod
     def parse_card(cls, card_string) -> 'Card':
         """
-        Converts a card string, e.g. "10♣" to a Card(Pip.Ten, Suit.Cubs)
+        Converts a card string, e.g. "10♣" to a Card(Pip.Ten, Suit.Clubs)
         :param card_string: The string representing the card
         :return: new Card object
         """
-        suit = Suit(card_string[-1])
+
+        is_revealed = True
         if card_string[0] == '|':
-            pip = Pip(card_string[1:-1])
-            return Card(pip, suit)
+            is_revealed = False
+            card_string = card_string[1:]
+
+        if card_string == '*':
+            pip, suit = None, None
         else:
-            pip = Pip(card_string[:-1])
-            return Card(pip, suit).reveal()
+            pip = Pip(card_string[:-1]) or None
+            suit = Suit(card_string[-1]) or None
+
+        return Card(pip, suit, is_revealed)
 
 
 class Deck:
