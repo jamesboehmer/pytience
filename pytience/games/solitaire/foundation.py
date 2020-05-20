@@ -30,9 +30,7 @@ class Foundation(Undoable):
             raise NoCardsRemainingException('No foundation cards for suit {}'.format(suit))
 
         card = pile.pop()
-        self.undo_stack.append([
-            UndoAction(self.undo_get, [str(suit), str(card)])
-        ])
+        self.undo_stack.append(UndoAction(self.undo_get, [str(suit), str(card)]))
         return card
 
     def undo_put(self, suit: str):
@@ -41,13 +39,12 @@ class Foundation(Undoable):
         pile.pop()
 
     def put(self, card: Card):
-        undo_log = []
         if card.is_concealed:
             raise ConcealedCardNotAllowedException('Foundation cards must be revealed')
         pile = self.piles[card.suit]
         if card.pip == Pip.Ace:
             pile.append(card)
-            undo_log.append(UndoAction(self.undo_put, [str(card.suit)]))
+            self.undo_stack.append(UndoAction(self.undo_put, [str(card.suit)]))
         elif not pile:
             raise IllegalFoundationBuildOrderException('Foundation cards must be built sequentially per suit.')
         else:
@@ -56,9 +53,7 @@ class Foundation(Undoable):
             if value != top_value + 1:
                 raise IllegalFoundationBuildOrderException('Foundation cards must be build sequentially per suit.')
             pile.append(card)
-            undo_log.append(UndoAction(self.undo_put, [str(card.suit)]))
-        if undo_log:
-            self.undo_stack.append(undo_log)
+            self.undo_stack.append(UndoAction(self.undo_put, [str(card.suit)]))
 
     @property
     def is_full(self) -> bool:
