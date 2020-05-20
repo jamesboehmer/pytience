@@ -47,6 +47,11 @@ class KlondikeGame(Undoable):
     def adjust_score(self, points: int):
         self.score += points
 
+    def undo_select_foundation(self):
+        self.adjust_score(POINTS_TABLEAU_FOUNDATION)
+        self.tableau.undo()
+        self.foundation.undo()
+
     def select_foundation(self, suit: Suit, tableau_destination_pile: int = None):
         card = self.foundation.get(suit)
 
@@ -55,11 +60,7 @@ class KlondikeGame(Undoable):
             try:
                 self.tableau.put([card], pile_num)
                 self.adjust_score(-POINTS_TABLEAU_FOUNDATION)
-                self.undo_stack.append([
-                    partial(self.foundation.undo),
-                    partial(self.tableau.undo),
-                    partial(self.adjust_score, POINTS_TABLEAU_FOUNDATION)
-                ])
+                self.undo_stack.append([partial(self.undo_select_foundation)])
                 return
             except TableauPileIndexError as e:
                 self.foundation.undo()
