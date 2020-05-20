@@ -174,9 +174,9 @@ class KlondikeCmd(Cmd):
 
     def default(self, line):
         cmd, arg, line = self.parseline(line)
-        if cmd == "_state":
+        if cmd == "_dump":
             print("\033[H\033[J")  # Clear screen
-            self.print_state()
+            self.print_dump()
             print("Press return to continue...")
             try:
                 input()
@@ -195,8 +195,8 @@ class KlondikeCmd(Cmd):
         else:
             self.errors.append(Exception("*** Unknown syntax: {} ***".format(line)))
 
-    def print_state(self):
-        print(json.dumps(self.klondike.state, indent=2, ensure_ascii=False))
+    def print_dump(self):
+        print(json.dumps(self.klondike.dump(), indent=2, ensure_ascii=False))
 
     def print_game(self):
         def _paint_suit(_suit):

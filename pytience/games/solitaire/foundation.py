@@ -58,3 +58,9 @@ class Foundation(Undoable):
     @property
     def is_full(self) -> bool:
         return all(len(pile) == 13 for pile in list(self.piles.values()))
+
+    def dump(self):
+        return {
+                "piles": {str(suit): list(map(str, pile)) for suit, pile in self.piles.items()},
+                "undo_stack": self.dump_undo_stack()
+            }

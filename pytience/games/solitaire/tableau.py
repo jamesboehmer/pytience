@@ -100,6 +100,15 @@ class Tableau(Undoable):
         else:
             return False
 
+    def dump(self):
+        return {
+                "piles": [
+                    list(map(str, pile))
+                    for pile in self.piles
+                ],
+                "undo_stack": self.dump_undo_stack()
+            }
+
     def __repr__(self):
         return str([len(p) for p in self.piles])
 

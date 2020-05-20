@@ -24,7 +24,7 @@ class Undoable:
             undo_action = self.undo_stack.pop()
             undo_action()
 
-    def export_undo_stack(self) -> object:
+    def dump_undo_stack(self) -> object:
         """
         Creates a serialization-friendly representation of the undo stack using
         function names and args instead of partials
@@ -32,7 +32,7 @@ class Undoable:
         """
         return [action.dump() for action in self.undo_stack]
 
-    def import_undo_stack(self, undo_stack) -> NoReturn:
+    def load_undo_stack(self, undo_stack) -> NoReturn:
         """
         Turn a list of lists of serialized functions from `export_undo_stack` into partials.
         Since the function_names are relative to self, care must be made not to create UndoActions with

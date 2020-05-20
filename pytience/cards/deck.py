@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import random
-from itertools import product
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Iterable, NoReturn
+from itertools import product
+from typing import Iterable
+
 from pytience.cards.exception import NoCardsRemainingException
 
 
@@ -150,6 +151,14 @@ class Deck:
         """Add a list of cards to the bottom of the deck"""
         self.cards.extend(cards)
         return self
+
+    def dump(self):
+        return {
+            "num_decks": self.num_decks,
+            "num_jokers": self.num_jokers,
+            "is_shuffled": self.is_shuffled,
+            "cards": list(map(str, self.cards))
+        }
 
     def __len__(self):
         return self.remaining
