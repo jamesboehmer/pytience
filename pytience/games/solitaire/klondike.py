@@ -207,18 +207,19 @@ class KlondikeGame(Undoable):
                 "num_decks": self.stock.num_decks,
                 "num_jokers": self.stock.num_jokers,
                 "is_shuffled": self.stock.is_shuffled,
-                "cards": list(map(repr, self.stock.cards))
+                "cards": list(map(str, self.stock.cards))
             },
             "waste": list(map(str, self.waste)),
             "foundation": {
-                "piles": {str(suit): list(map(repr, pile)) for suit, pile in self.foundation.piles.items()},
-                "undo_stack": None  # TODO: implement undo_stack serialization
+                "piles": {str(suit): list(map(str, pile)) for suit, pile in self.foundation.piles.items()},
+                "undo_stack": self.foundation.export_undo_stack()
             },
             "tableau": {
                 "piles": [
-                    list(map(repr, pile))
+                    list(map(str, pile))
                     for pile in self.tableau.piles
                 ],
-                "undo_stack": None  # TODO: implement undo_stack serialization
-            }
+                "undo_stack": self.tableau.export_undo_stack()
+            },
+            "undo_stack": self.export_undo_stack()
         }
