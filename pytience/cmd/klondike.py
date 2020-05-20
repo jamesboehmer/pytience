@@ -5,7 +5,6 @@ from itertools import zip_longest
 from pathlib import Path
 import json
 
-import dill
 from colorama import Style, Fore, Back
 
 from pytience.cards.deck import Card, Suit, Color
@@ -146,8 +145,8 @@ class KlondikeCmd(Cmd):
         # TODO: change serialization to JSON
         DEFAULT_SAVE_FILE.parent.mkdir(parents=True, exist_ok=True)
         filename = filename or DEFAULT_SAVE_FILE
-        with open(filename, 'wb') as f:
-            dill.dump(klondike, f)
+        with open(filename, 'w') as f:
+            json.dump(klondike.dump(), f)
 
     @error_handler
     def do_save(self, line):
@@ -159,8 +158,9 @@ class KlondikeCmd(Cmd):
     def load(filename=None):
         # TODO: change serialization to JSON
         filename = filename or DEFAULT_SAVE_FILE
-        with open(filename, 'rb') as f:
-            return dill.load(f)
+        with open(filename, 'r') as f:
+            game_dump = json.load(f)
+            return KlondikeGame(game_dump=game_dump)
 
     @error_handler
     def do_load(self, line):
