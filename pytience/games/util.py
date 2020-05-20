@@ -8,7 +8,7 @@ class UndoAction:
     args: List[Any] = field(default_factory=list)
 
     def dump(self):
-        return {'function_name': self.function.__name__, 'args': self.args}
+        return {'action': self.function.__name__, 'args': self.args}
 
     def __call__(self, *_, **__):
         self.function(*self.args)
@@ -45,7 +45,7 @@ class Undoable:
         """
         self.undo_stack = [
             [
-                UndoAction(getattr(self, action['function_name']), *action['args']) for action in actions
+                UndoAction(getattr(self, action['action']), *action['args']) for action in actions
             ]
             for actions in undo_stack
         ]
