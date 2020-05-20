@@ -1,5 +1,4 @@
 from enum import Enum
-from functools import partial
 from typing import Dict, List, Iterable, Union, Type
 
 from pytience.cards.deck import Suit, Card, Pip
@@ -7,7 +6,7 @@ from pytience.cards.exception import NoCardsRemainingException
 from pytience.games.solitaire import CARD_VALUES
 from pytience.games.solitaire.exception import ConcealedCardNotAllowedException, NoSuchSuitException, \
     IllegalFoundationBuildOrderException
-from pytience.games.util import Undoable
+from pytience.games.util import Undoable, UndoAction
 
 
 # TODO: make more specific exceptions so that error conditions can be less ambiguous
@@ -32,7 +31,7 @@ class Foundation(Undoable):
 
         card = pile.pop()
         self.undo_stack.append([
-            partial(self.undo_get, str(suit), str(card))
+            UndoAction(self.undo_get, [str(suit), str(card)])
         ])
         return card
 
@@ -48,7 +47,7 @@ class Foundation(Undoable):
         pile = self.piles[card.suit]
         if card.pip == Pip.Ace:
             pile.append(card)
-            undo_log.append(partial(self.undo_put, str(card.suit)))
+            undo_log.append(UndoAction(self.undo_put, [str(card.suit)]))
         elif not pile:
             raise IllegalFoundationBuildOrderException('Foundation cards must be built sequentially per suit.')
         else:
@@ -57,7 +56,7 @@ class Foundation(Undoable):
             if value != top_value + 1:
                 raise IllegalFoundationBuildOrderException('Foundation cards must be build sequentially per suit.')
             pile.append(card)
-            undo_log.append(partial(self.undo_put, str(card.suit)))
+            undo_log.append(UndoAction(self.undo_put, [str(card.suit)]))
         if undo_log:
             self.undo_stack.append(undo_log)
 

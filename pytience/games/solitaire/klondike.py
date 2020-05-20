@@ -1,10 +1,9 @@
-from functools import partial
 from typing import List, NoReturn
 
 from pytience.cards.deck import Deck, Card, Suit
 from pytience.games.solitaire.foundation import Foundation
 from pytience.games.solitaire.tableau import Tableau
-from pytience.games.util import Undoable
+from pytience.games.util import Undoable, UndoAction
 from pytience.games.solitaire.exception import IllegalMoveException, IllegalTableauMoveException, \
     IllegalFoundationMoveException, TableauPileIndexError
 from pytience.cards.exception import NoCardsRemainingException
@@ -40,7 +39,7 @@ class KlondikeGame(Undoable):
                 replenished = True  # we need to know this for the undo event
         try:
             self.waste.append(self.stock.deal().reveal())
-            self.undo_stack.append([partial(self.undo_deal, replenished)])
+            self.undo_stack.append([UndoAction(self.undo_deal, [replenished])])
         except NoCardsRemainingException:
             raise IllegalMoveException('No cards left in the stock or waste')
 
@@ -60,7 +59,7 @@ class KlondikeGame(Undoable):
             try:
                 self.tableau.put([card], pile_num)
                 self.adjust_score(-POINTS_TABLEAU_FOUNDATION)
-                self.undo_stack.append([partial(self.undo_select_foundation)])
+                self.undo_stack.append([UndoAction(self.undo_select_foundation)])
                 return
             except TableauPileIndexError as e:
                 self.foundation.undo()
@@ -90,7 +89,7 @@ class KlondikeGame(Undoable):
             try:
                 self.foundation.put(card)
                 self.adjust_score(POINTS_WASTE_FOUNDATION)
-                self.undo_stack.append([partial(self.undo_select_waste, True, str(card))])
+                self.undo_stack.append([UndoAction(self.undo_select_waste, [True, str(card)])])
                 return
             except IllegalFoundationMoveException:
                 pass
@@ -100,7 +99,7 @@ class KlondikeGame(Undoable):
             try:
                 self.tableau.put([card], pile_num)
                 self.adjust_score(POINTS_WASTE_TABLEAU)
-                self.undo_stack.append([partial(self.undo_select_waste, False, str(card))])
+                self.undo_stack.append([UndoAction(self.undo_select_waste, [False, str(card)])])
                 return
             except IllegalTableauMoveException:
                 pass
@@ -124,7 +123,7 @@ class KlondikeGame(Undoable):
                 cards = self.tableau.get(_pile_num, -1)
                 self.foundation.put(cards[0])
                 self.score += POINTS_TABLEAU_FOUNDATION
-                self.undo_stack.append([partial(self.undo_seek_tableau_to_foundation)])
+                self.undo_stack.append([UndoAction(self.undo_seek_tableau_to_foundation)])
                 return
             except IllegalTableauMoveException:
                 # The chosen pile has no cards.  No tableau undo needed.
@@ -159,7 +158,7 @@ class KlondikeGame(Undoable):
                 try:
                     self.foundation.put(cards[0])
                     self.score += POINTS_TABLEAU_FOUNDATION
-                    self.undo_stack.append([partial(self.undo_select_tableau, True)])
+                    self.undo_stack.append([UndoAction(self.undo_select_tableau, [True])])
                     return
                 except IllegalFoundationMoveException:
                     pass  # Don't undo the tableau get because we need to search for another tableau destination now
@@ -170,7 +169,7 @@ class KlondikeGame(Undoable):
                 if pile_num != destination:
                     try:
                         self.tableau.put(cards, destination)
-                        self.undo_stack.append([partial(self.undo_select_tableau, False)])
+                        self.undo_stack.append([UndoAction(self.undo_select_tableau, [False])])
                         return
                     except IllegalTableauMoveException:
                         pass

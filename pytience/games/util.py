@@ -1,5 +1,4 @@
 from typing import List, Callable, NoReturn, Any
-from functools import partial
 from dataclasses import dataclass, field
 
 
@@ -8,7 +7,7 @@ class UndoAction:
     function: Callable
     args: List[Any] = field(default_factory=list)
 
-    def __repr__(self):
+    def dump(self):
         return {'function_name': self.function.__name__, 'args': self.args}
 
     def __call__(self, *_, **__):
@@ -34,7 +33,7 @@ class Undoable:
         :return: A language-agnostic object representing the undo stack
         """
         return [
-            [{'function_name': action.func.__name__, 'args': action.args} for action in actions]
+            [action.dump() for action in actions]
             for actions in self.undo_stack
         ]
 
@@ -46,7 +45,7 @@ class Undoable:
         """
         self.undo_stack = [
             [
-                partial(getattr(self, action['function_name']), *action['args']) for action in actions
+                UndoAction(getattr(self, action['function_name']), *action['args']) for action in actions
             ]
             for actions in undo_stack
         ]

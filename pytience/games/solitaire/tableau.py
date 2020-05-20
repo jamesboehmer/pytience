@@ -1,11 +1,10 @@
-from functools import partial
 from typing import List, NoReturn
 
 from pytience.cards.deck import Deck, Card, Pip
 from pytience.games.solitaire import CARD_VALUES
 from pytience.games.solitaire.exception import TableauCardIndexError, TableauPileIndexError, \
     TableauCardNotAvailableException, IllegalTableauBuildOrderException, ConcealedCardNotAllowedException
-from pytience.games.util import Undoable
+from pytience.games.util import Undoable, UndoAction
 
 
 class Tableau(Undoable):
@@ -37,7 +36,7 @@ class Tableau(Undoable):
         if not pile:
             if cards[0].pip == Pip.King:
                 pile.extend(cards)
-                self.undo_stack.append([partial(self.undo_put, pile_num, len(cards))])
+                self.undo_stack.append([UndoAction(self.undo_put, [pile_num, len(cards)])])
                 return
             else:
                 raise IllegalTableauBuildOrderException('Only Kings may be built on empty tableau piles.')
@@ -46,7 +45,7 @@ class Tableau(Undoable):
                 'Tableau cards must be built in descending order with alternate colors')
         else:
             pile.extend(cards)
-            self.undo_stack.append([partial(self.undo_put, pile_num, len(cards))])
+            self.undo_stack.append([UndoAction(self.undo_put, [pile_num, len(cards)])])
 
     def undo_get(self, pile_num: int, card_strings: List[str], re_conceal: bool):
         if re_conceal:
@@ -70,7 +69,7 @@ class Tableau(Undoable):
         for _ in range(len(cards)):
             pile.pop()
         revealed = self._reveal(pile_num)
-        self.undo_stack.append([partial(self.undo_get, pile_num, list(map(str, cards)), revealed)])
+        self.undo_stack.append([UndoAction(self.undo_get, [pile_num, list(map(str, cards)), revealed])])
         return cards
 
     def _reveal(self, pile_num: int) -> bool:
