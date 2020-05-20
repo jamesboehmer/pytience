@@ -37,6 +37,6 @@ class Undoable:
         Turn a list of lists of serialized functions from `export_undo_stack` into partials.
         Since the function_names are relative to self, care must be made not to create UndoActions with
         function calls outside the current class
-        :param undo_stack: A list of lists of
+        :param undo_stack: A list of serialized UndoAction object from dump_undo_stack()
         """
         self.undo_stack = [UndoAction(getattr(self, action['action']), *action['args']) for action in undo_stack]
