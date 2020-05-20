@@ -112,6 +112,11 @@ class KlondikeGame(Undoable):
             )
         )
 
+    def undo_seek_tableau_to_foundation(self):
+        self.adjust_score(-POINTS_TABLEAU_FOUNDATION)
+        self.foundation.undo()
+        self.tableau.undo()
+
     def seek_tableau_to_foundation(self):
         # Seek a tableau pile whose top card fits in the foundation
         for _pile_num in range(len(self.tableau)):
@@ -119,11 +124,7 @@ class KlondikeGame(Undoable):
                 cards = self.tableau.get(_pile_num, -1)
                 self.foundation.put(cards[0])
                 self.score += POINTS_TABLEAU_FOUNDATION
-                self.undo_stack.append([
-                    partial(self.tableau.undo),
-                    partial(self.foundation.undo),
-                    partial(self.adjust_score, -POINTS_TABLEAU_FOUNDATION)
-                ])
+                self.undo_stack.append([partial(self.undo_seek_tableau_to_foundation)])
                 return
             except IllegalTableauMoveException:
                 # The chosen pile has no cards.  No tableau undo needed.
@@ -132,6 +133,14 @@ class KlondikeGame(Undoable):
                 # There was no fit in the foundation, so put the card back in the tableau and move on
                 self.tableau.undo()
         raise IllegalMoveException("No tableau cards fit in the foundation.")
+
+    def undo_select_tableau(self, undo_foundation: bool):
+        if undo_foundation:
+            self.adjust_score(-POINTS_TABLEAU_FOUNDATION)
+            self.foundation.undo
+        else:
+            self.tableau.undo()
+        self.tableau.undo()
 
     def select_tableau(self, pile_num: int = None, card_num: int = None, destination_pile_num: int = None):
         if pile_num is None:
@@ -150,11 +159,7 @@ class KlondikeGame(Undoable):
                 try:
                     self.foundation.put(cards[0])
                     self.score += POINTS_TABLEAU_FOUNDATION
-                    self.undo_stack.append([
-                        partial(self.tableau.undo),
-                        partial(self.foundation.undo),
-                        partial(self.adjust_score, -POINTS_TABLEAU_FOUNDATION)
-                    ])
+                    self.undo_stack.append([partial(self.undo_select_tableau, True)])
                     return
                 except IllegalFoundationMoveException:
                     pass  # Don't undo the tableau get because we need to search for another tableau destination now
@@ -165,11 +170,7 @@ class KlondikeGame(Undoable):
                 if pile_num != destination:
                     try:
                         self.tableau.put(cards, destination)
-                        self.undo_stack.append([
-                            partial(self.tableau.undo),  # get
-                            partial(self.tableau.undo)  # put
-                        ])
-
+                        self.undo_stack.append([partial(self.undo_select_tableau, False)])
                         return
                     except IllegalTableauMoveException:
                         pass
