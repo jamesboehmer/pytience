@@ -1,5 +1,18 @@
-from typing import List, Callable, NoReturn
+from typing import List, Callable, NoReturn, Any
 from functools import partial
+from dataclasses import dataclass, field
+
+
+@dataclass
+class UndoAction:
+    function: Callable
+    args: List[Any] = field(default_factory=list)
+
+    def __repr__(self):
+        return {'function_name': self.function.__name__, 'args': self.args}
+
+    def __call__(self, *_, **__):
+        self.function(*self.args)
 
 
 class Undoable:
