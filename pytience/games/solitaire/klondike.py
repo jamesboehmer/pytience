@@ -71,6 +71,15 @@ class KlondikeGame(Undoable):
         self.foundation.undo()
         raise IllegalMoveException('No tableau fit for {}'.format(str(card)))
 
+    def undo_select_waste(self, undo_foundation: bool, card_string: str):
+        if undo_foundation:
+            self.adjust_score(-POINTS_WASTE_FOUNDATION)
+            self.foundation.undo()
+        else:
+            self.adjust_score(-POINTS_WASTE_TABLEAU)
+            self.tableau.undo()
+        self.waste.append(Card.parse_card(card_string))
+
     def select_waste(self, tableau_destination_pile: int = None):
         """Try to find the best fit for the top waste card"""
 
@@ -81,11 +90,7 @@ class KlondikeGame(Undoable):
             try:
                 self.foundation.put(card)
                 self.adjust_score(POINTS_WASTE_FOUNDATION)
-                self.undo_stack.append([
-                    partial(self.waste.append, card),
-                    partial(self.foundation.undo),
-                    partial(self.adjust_score, -POINTS_WASTE_FOUNDATION)
-                ])
+                self.undo_stack.append([partial(self.undo_select_waste, True, str(card))])
                 return
             except IllegalFoundationMoveException:
                 pass
@@ -95,11 +100,7 @@ class KlondikeGame(Undoable):
             try:
                 self.tableau.put([card], pile_num)
                 self.adjust_score(POINTS_WASTE_TABLEAU)
-                self.undo_stack.append([
-                    partial(self.waste.append, card),
-                    partial(self.tableau.undo),
-                    partial(self.adjust_score, -POINTS_WASTE_TABLEAU)
-                ])
+                self.undo_stack.append([partial(self.undo_select_waste, False, str(card))])
                 return
             except IllegalTableauMoveException:
                 pass
