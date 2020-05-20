@@ -136,7 +136,7 @@ class KlondikeGame(Undoable):
     def undo_select_tableau(self, undo_foundation: bool):
         if undo_foundation:
             self.adjust_score(-POINTS_TABLEAU_FOUNDATION)
-            self.foundation.undo
+            self.foundation.undo()
         else:
             self.tableau.undo()
         self.tableau.undo()
