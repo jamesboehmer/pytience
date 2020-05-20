@@ -24,32 +24,25 @@ class KlondikeGame(Undoable):
 
         self.foundation = Foundation(suits=Suit)
 
+    def undo_deal(self, undo_replenish: bool):
+        self.stock.undeal(self.waste.pop().conceal())
+        if undo_replenish:
+            self.waste.extend(map(lambda c: c.reveal(), self.stock.deal_all()))
+
     def deal(self) -> NoReturn:
         """Deal n cards from the stock into the waste pile"""
 
-        _undo_log = []
-
+        replenished = False
         if self.stock.remaining == 0:
-            if self.waste:  # only generate an undo event if there's something to undo
+            if self.waste:
                 self.stock.replenish(c.conceal() for c in self.waste)
                 self.waste.clear()
-                _undo_log.append(
-                    partial(
-                        lambda _waste, _stock: _waste.extend([_stock.deal().reveal() for _ in range(_stock.remaining)]),
-                        self.waste, self.stock)
-                )
+                replenished = True  # we need to know this for the undo event
         try:
-            card = self.stock.deal()
-            _undo_log.append(partial(self.stock.undeal, card))
-            card.reveal()
-            _undo_log.append(partial(card.conceal))
-            self.waste.append(card)
-            _undo_log.append(partial(self.waste.pop))
+            self.waste.append(self.stock.deal().reveal())
+            self.undo_stack.append([partial(self.undo_deal, replenished)])
         except NoCardsRemainingException:
             raise IllegalMoveException('No cards left in the stock or waste')
-
-        if _undo_log:
-            self.undo_stack.append(_undo_log)
 
     def adjust_score(self, points: int):
         self.score += points

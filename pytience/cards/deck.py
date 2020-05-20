@@ -136,7 +136,7 @@ class Deck:
             raise NoCardsRemainingException("No cards remaining in the deck.")
         return self.cards.popleft()
 
-    def deal_all(self) -> Card:
+    def deal_all(self) -> Iterable[Card]:
         """Deal all the cards"""
         while len(self.cards) > 0:
             yield self.cards.popleft()
