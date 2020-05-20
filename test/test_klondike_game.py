@@ -414,10 +414,10 @@ class KlondikeGameTestCase(TestCase):
 
         self.assertTrue(klondike.foundation.is_full, "Foundation should be full.")
 
-    def test_state(self):
+    def test_dump(self):
         klondike = KlondikeGame()
-        state = klondike.state
-        self.assertIsInstance(state, dict, "Klondike state should be a dict.")
+        game_dump = klondike.dump()
+        self.assertIsInstance(game_dump, dict, "Klondike dump should be a dict.")
 
     def test_undo(self):
         pass  # TODO: implement

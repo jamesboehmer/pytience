@@ -111,14 +111,17 @@ class Card:
 
 
 class Deck:
-    def __init__(self, num_decks: int = 1, num_jokers_per_deck: int = 0):
-        self.num_decks = num_decks
-        self.num_jokers = num_jokers_per_deck
-        self.cards = deque(
-            [Card(pip, suit) for suit, pip in product(Suit, Pip)] * num_decks +
-            [Card(None, None)] * num_jokers_per_deck * num_decks
-        )
-        self.is_shuffled = False
+    def __init__(self, num_decks: int = 1, num_jokers_per_deck: int = 0, deck_dump: object = None):
+        if deck_dump:
+            self.load(deck_dump)
+        else:
+            self.num_decks = num_decks
+            self.num_jokers = num_jokers_per_deck
+            self.cards = deque(
+                [Card(pip, suit) for suit, pip in product(Suit, Pip)] * num_decks +
+                [Card(None, None)] * num_jokers_per_deck * num_decks
+            )
+            self.is_shuffled = False
 
     def shuffle(self):
         """Ensure the deck is shuffled"""
@@ -159,6 +162,12 @@ class Deck:
             "is_shuffled": self.is_shuffled,
             "cards": list(map(str, self.cards))
         }
+
+    def load(self, deck_dump: object):
+        self.num_decks = deck_dump["num_decks"]
+        self.num_jokers = deck_dump["num_jokers"]
+        self.is_shuffled = deck_dump["is_shuffled"]
+        self.cards = deque([Card.parse_card(card_string) for card_string in deck_dump["cards"]])
 
     def __len__(self):
         return self.remaining

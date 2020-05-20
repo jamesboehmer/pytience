@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Iterable, Union, Type
+from typing import Dict, List, Iterable, Union, Type, NoReturn
 
 from pytience.cards.deck import Suit, Card, Pip
 from pytience.cards.exception import NoCardsRemainingException
@@ -9,12 +9,14 @@ from pytience.games.solitaire.exception import ConcealedCardNotAllowedException,
 from pytience.games.util import Undoable, UndoAction
 
 
-# TODO: make more specific exceptions so that error conditions can be less ambiguous
 class Foundation(Undoable):
 
-    def __init__(self, suits: Union[Type[Enum], Iterable]):
-        self.piles: Dict[Suit, List[Card]] = {suit: [] for suit in suits}
-        super().__init__()
+    def __init__(self, suits: Union[Type[Enum], Iterable] = Suit, foundation_dump: object = None):
+        if foundation_dump:
+            self.load(foundation_dump)
+        else:
+            self.piles: Dict[Suit, List[Card]] = {suit: [] for suit in suits}
+            super().__init__()
 
     def undo_get(self, suit: str, card: str):
         _suit = Suit(suit)
@@ -59,8 +61,24 @@ class Foundation(Undoable):
     def is_full(self) -> bool:
         return all(len(pile) == 13 for pile in list(self.piles.values()))
 
-    def dump(self):
+    def dump(self) -> object:
+        """
+        Dumps the current state of the Foundation
+        :return: A JSON-ready object
+        """
         return {
-                "piles": {str(suit): list(map(str, pile)) for suit, pile in self.piles.items()},
-                "undo_stack": self.dump_undo_stack()
-            }
+            "piles": {str(suit): list(map(str, pile)) for suit, pile in self.piles.items()},
+            "undo_stack": self.dump_undo_stack()
+        }
+
+    def load(self, foundation_dump: object) -> NoReturn:
+        """
+        Import the foundation state previously exported with dump()
+        :param foundation_dump: An object previously exported by dump()
+        """
+        self.piles = {
+            Suit(suit): [Card.parse_card(card_string) for card_string in pile] for suit, pile in
+            foundation_dump["piles"].items()
+        }
+        self.load_undo_stack(foundation_dump["undo_stack"])
+

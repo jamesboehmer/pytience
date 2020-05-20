@@ -39,4 +39,4 @@ class Undoable:
         function calls outside the current class
         :param undo_stack: A list of serialized UndoAction object from dump_undo_stack()
         """
-        self.undo_stack = [UndoAction(getattr(self, action['action']), *action['args']) for action in undo_stack]
+        self.undo_stack = [UndoAction(getattr(self, action['action']), action['args']) for action in undo_stack]

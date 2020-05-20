@@ -8,19 +8,22 @@ from pytience.games.util import Undoable, UndoAction
 
 
 class Tableau(Undoable):
-    def __init__(self, size: int = 7, deck: Deck = None):
-        self.piles: List[List[Card]] = [[] for _ in range(max(size, 1))]
+    def __init__(self, size: int = 7, deck: Deck = None, tableau_dump: object = None):
+        if tableau_dump:
+            self.load(tableau_dump)
+        else:
+            self.piles: List[List[Card]] = [[] for _ in range(max(size, 1))]
 
-        # Cards should be dealt one per tableau pile, revealing the top card as it's dealt.
-        if deck is not None:
-            for starting_pile_num in range(len(self.piles)):
-                for pile_num in range(starting_pile_num, len(self.piles)):
-                    card = deck.deal()
-                    if pile_num == starting_pile_num:
-                        card.reveal()
-                    self.piles[pile_num].append(card)
+            # Cards should be dealt one per tableau pile, revealing the top card as it's dealt.
+            if deck is not None:
+                for starting_pile_num in range(len(self.piles)):
+                    for pile_num in range(starting_pile_num, len(self.piles)):
+                        card = deck.deal()
+                        if pile_num == starting_pile_num:
+                            card.reveal()
+                        self.piles[pile_num].append(card)
 
-        super().__init__()
+            super().__init__()
 
     def undo_put(self, pile_num: int, num_cards: int):
         pile = self.piles[pile_num]
@@ -100,14 +103,26 @@ class Tableau(Undoable):
         else:
             return False
 
-    def dump(self):
+    def dump(self) -> object:
+        """
+        Dumps the current state of the Tableau
+        :return: A JSON-ready object
+        """
         return {
-                "piles": [
-                    list(map(str, pile))
-                    for pile in self.piles
-                ],
-                "undo_stack": self.dump_undo_stack()
-            }
+            "piles": [
+                list(map(str, pile))
+                for pile in self.piles
+            ],
+            "undo_stack": self.dump_undo_stack()
+        }
+
+    def load(self, tableau_dump: object) -> NoReturn:
+        """
+        Import the tableau state previously exported with dump()
+        :param tableau_dump: An object previously exported by dump()
+        """
+        self.piles = [[Card.parse_card(card_string) for card_string in pile] for pile in tableau_dump["piles"]]
+        self.load_undo_stack(tableau_dump["undo_stack"])
 
     def __repr__(self):
         return str([len(p) for p in self.piles])

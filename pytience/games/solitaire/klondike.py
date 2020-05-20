@@ -14,14 +14,16 @@ POINTS_TABLEAU_FOUNDATION = 15
 
 
 class KlondikeGame(Undoable):
-    def __init__(self):
-        self.stock: Deck = Deck().shuffle()
-        self.tableau: Tableau = Tableau(7, self.stock)
-        self.waste: List[Card] = []
-        self.score = 0
-        super().__init__()
-
-        self.foundation = Foundation(suits=Suit)
+    def __init__(self, game_dump: object = None):
+        if game_dump:
+            self.load(game_dump)
+        else:
+            self.stock: Deck = Deck().shuffle()
+            self.tableau: Tableau = Tableau(7, self.stock)
+            self.waste: List[Card] = []
+            self.score = 0
+            self.foundation = Foundation(suits=Suit)
+            super().__init__()
 
     def undo_deal(self, undo_replenish: bool):
         self.stock.undeal(self.waste.pop().conceal())
@@ -198,7 +200,7 @@ class KlondikeGame(Undoable):
         if not self.is_solved():
             self.seek_tableau_to_foundation()
 
-    def dump(self):
+    def dump(self) -> object:
         return {
             "score": self.score,
             "stock": self.stock.dump(),
@@ -207,3 +209,11 @@ class KlondikeGame(Undoable):
             "tableau": self.tableau.dump(),
             "undo_stack": self.dump_undo_stack()
         }
+
+    def load(self, game_dump: object) -> NoReturn:
+        self.score = game_dump.get("score", 0)
+        self.stock = Deck(deck_dump=game_dump.get("stock", dict()))
+        self.waste = list(map(Card.parse_card, game_dump.get("waste", list())))
+        self.foundation = Foundation(foundation_dump=game_dump.get("foundation", dict()))
+        self.tableau = Tableau(tableau_dump=game_dump.get("tableau", dict()))
+        self.load_undo_stack(game_dump.get("undo_stack", list()))
