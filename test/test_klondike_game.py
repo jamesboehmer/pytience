@@ -414,10 +414,58 @@ class KlondikeGameTestCase(TestCase):
 
         self.assertTrue(klondike.foundation.is_full, "Foundation should be full.")
 
-    def test_state(self):
+    def test_dump(self):
         klondike = KlondikeGame()
-        state = klondike.state
-        self.assertIsInstance(state, dict, "Klondike state should be a dict.")
+        piles = [
+            ["K♣", "Q♥", "J♣", "10♥", "9♣"],
+            ["K♦"],
+            ["|A♣", "|2♣", "10♦"],
+            [],
+            ["|4♣", "|6♥", "|8♦", "10♣", "9♦", "8♠", "7♦", "6♠"],
+            ["|3♣", "K♠", "Q♦"],
+            ["|9♥", "|5♦", "|3♠", "|7♣", "|8♣", "|K♥", "7♠", "6♦", "5♠", "4♥"]
+        ]
+        klondike.tableau.piles = list(map(lambda p: list(map(Card.parse_card, p)), piles))
+        klondike.select_tableau(0, 2, 5)
+        self.assertEqual(len(klondike.undo_stack), 1, "There should be exactly 1 undo action in the game.")
+        undo_stack = list(map(lambda u: {'action': u.function.__name__, 'args': u.args}, klondike.undo_stack))
+
+        dump = klondike.dump()
+        self.assertEqual(dump["score"], klondike.score)
+        self.assertListEqual(dump["waste"], klondike.waste)
+        self.assertListEqual(dump["undo_stack"], undo_stack)
+        # Don't bother with equivalence testing, just make sure these objects exist and aren't empty
+        self.assertTrue(dump["stock"])
+        self.assertTrue(dump["foundation"])
+        self.assertTrue(dump["tableau"])
+
+    def test_load(self):
+        dump = {"score": 0,
+                "stock": {"num_decks": 1, "num_jokers": 0, "is_shuffled": True,
+                          "cards": ["|3♥", "|K♠", "|A♠", "|4♥", "|9♣", "|6♦", "|Q♠", "|4♣", "|3♣", "|9♠",
+                                    "|8♥", "|4♠", "|5♥", "|J♣", "|2♣", "|K♥", "|5♠", "|3♠", "|6♥", "|K♣",
+                                    "|6♣", "|Q♣", "|7♥", "|3♦"]},
+                "waste": [],
+                "foundation": {"piles": {"♠": [], "♦": [], "♣": [], "♥": []}, "undo_stack": []},
+                "tableau": {
+                    "piles": [["K♣", "Q♥"], ["K♦"], ["|A♣", "|2♣", "10♦"], [],
+                              ["|4♣", "|6♥", "|8♦", "10♣", "9♦", "8♠", "7♦", "6♠"],
+                              ["|3♣", "K♠", "Q♦", "J♣", "10♥", "9♣"],
+                              ["|9♥", "|5♦", "|3♠", "|7♣", "|8♣", "|K♥", "7♠", "6♦", "5♠", "4♥"]],
+                    "undo_stack": [{"action": "undo_get", "args": [0, ["J♣", "10♥", "9♣"], False]},
+                                   {"action": "undo_put", "args": [5, 3]}]},
+                "undo_stack": [{"action": "undo_select_tableau", "args": [False]}]}
+
+        klondike = KlondikeGame(game_dump=dump)
+        undo_stack = list(map(lambda u: {'action': u.function.__name__, 'args': u.args}, klondike.undo_stack))
+
+        self.assertEqual(dump["score"], klondike.score)
+        self.assertListEqual(dump["waste"], klondike.waste)
+        self.assertListEqual(dump["undo_stack"], undo_stack)
+        # Don't bother with equivalence testing, just make sure these objects exist and aren't empty
+        self.assertTrue(klondike.stock)
+        self.assertTrue(klondike.foundation)
+        self.assertTrue(klondike.tableau)
 
     def test_undo(self):
         pass  # TODO: implement

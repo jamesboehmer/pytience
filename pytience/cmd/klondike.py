@@ -5,7 +5,6 @@ from itertools import zip_longest
 from pathlib import Path
 import json
 
-import dill
 from colorama import Style, Fore, Back
 
 from pytience.cards.deck import Card, Suit, Color
@@ -146,8 +145,8 @@ class KlondikeCmd(Cmd):
         # TODO: change serialization to JSON
         DEFAULT_SAVE_FILE.parent.mkdir(parents=True, exist_ok=True)
         filename = filename or DEFAULT_SAVE_FILE
-        with open(filename, 'wb') as f:
-            dill.dump(klondike, f)
+        with open(filename, 'w') as f:
+            json.dump(klondike.dump(), f)
 
     @error_handler
     def do_save(self, line):
@@ -159,8 +158,9 @@ class KlondikeCmd(Cmd):
     def load(filename=None):
         # TODO: change serialization to JSON
         filename = filename or DEFAULT_SAVE_FILE
-        with open(filename, 'rb') as f:
-            return dill.load(f)
+        with open(filename, 'r') as f:
+            game_dump = json.load(f)
+            return KlondikeGame(game_dump=game_dump)
 
     @error_handler
     def do_load(self, line):
@@ -174,9 +174,9 @@ class KlondikeCmd(Cmd):
 
     def default(self, line):
         cmd, arg, line = self.parseline(line)
-        if cmd == "_state":
+        if cmd == "_dump":
             print("\033[H\033[J")  # Clear screen
-            self.print_state()
+            self.print_dump()
             print("Press return to continue...")
             try:
                 input()
@@ -195,8 +195,8 @@ class KlondikeCmd(Cmd):
         else:
             self.errors.append(Exception("*** Unknown syntax: {} ***".format(line)))
 
-    def print_state(self):
-        print(json.dumps(self.klondike.state, indent=2, ensure_ascii=False))
+    def print_dump(self):
+        print(json.dumps(self.klondike.dump(), indent=2, ensure_ascii=False))
 
     def print_game(self):
         def _paint_suit(_suit):
@@ -204,12 +204,13 @@ class KlondikeCmd(Cmd):
                                      Style.RESET_ALL)
 
         def _paint_card(_card: Card, left_pad: int = 0, right_pad: int = 0):
-            length = len(str(_card))
+            card_string = '#' if _card.is_concealed else str(_card)
+            length = len(card_string)
             left = ' ' * (left_pad - length)
             right = ' ' * (right_pad - length - len(left))
 
             if _card.is_concealed or _card.pip is None:
-                return '{}{}{}{}{}'.format(left, Style.BRIGHT, str(_card), Style.RESET_ALL, right)
+                return '{}{}{}{}{}'.format(left, Style.BRIGHT, str(card_string), Style.RESET_ALL, right)
 
             return '{}{}{}{}{}{}'.format(left, Style.BRIGHT, _card.pip.value, _paint_suit(_card.suit), Style.RESET_ALL,
                                          right)

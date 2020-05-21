@@ -90,6 +90,47 @@ class FoundationTestCase(TestCase):
 
         self.assertTrue(foundation.is_full, "Foundation should be considered full with 13 cards in each pile.")
 
+    @staticmethod
+    def _get_foundation_components(foundation):
+        keys = set(map(str, foundation.piles.keys()))
+        hearts = list(map(str, foundation.piles[Suit.Hearts]))
+        clubs = list(map(str, foundation.piles[Suit.Clubs]))
+        diamonds = list(map(str, foundation.piles[Suit.Diamonds]))
+        spades = list(map(str, foundation.piles[Suit.Spades]))
+        undo_stack = list(map(lambda u: {'action': u.function.__name__, 'args': u.args}, foundation.undo_stack))
+        return (keys, hearts, clubs, diamonds, spades, undo_stack)
+
+    def test_dump(self):
+        foundation = Foundation()
+        for suit, pip in product(Suit, [Pip.Ace, Pip.Two, Pip.Three, Pip.Four, Pip.Five, Pip.Six, Pip.Seven, Pip.Eight,
+                                        Pip.Nine, Pip.Ten, Pip.Jack, Pip.Queen, Pip.King]):
+            foundation.put(Card(pip, suit, True))
+
+        dump = foundation.dump()
+        (keys, hearts, clubs, diamonds, spades, undo_stack) = self._get_foundation_components(foundation)
+        self.assertSetEqual(keys, set(dump["piles"].keys()))
+        self.assertListEqual(hearts, dump["piles"][Suit.Hearts.value])
+        self.assertListEqual(clubs, dump["piles"][Suit.Clubs.value])
+        self.assertListEqual(diamonds, dump["piles"][Suit.Diamonds.value])
+        self.assertListEqual(spades, dump["piles"][Suit.Spades.value])
+        self.assertListEqual(undo_stack, dump["undo_stack"])
+
+    def test_load(self):
+        # TODO: externalize this fixture
+        dump = {"piles": {"♠": [], "♦": ["A♦", "2♦", "3♦"], "♣": [], "♥": ["A♥"]},
+                "undo_stack": [{"action": "undo_put", "args": ["♥"]}, {"action": "undo_put", "args": ["♦"]},
+                               {"action": "undo_put", "args": ["♦"]}, {"action": "undo_put", "args": ["♦"]}]}
+
+        foundation = Foundation(foundation_dump=dump)
+        (keys, hearts, clubs, diamonds, spades, undo_stack) = self._get_foundation_components(foundation)
+
+        self.assertSetEqual(set(map(str, foundation.piles.keys())), set(dump["piles"].keys()))
+        self.assertListEqual(list(map(str, foundation.piles[Suit.Hearts])), dump["piles"][Suit.Hearts.value])
+        self.assertListEqual(list(map(str, foundation.piles[Suit.Clubs])), dump["piles"][Suit.Clubs.value])
+        self.assertListEqual(list(map(str, foundation.piles[Suit.Diamonds])), dump["piles"][Suit.Diamonds.value])
+        self.assertListEqual(list(map(str, foundation.piles[Suit.Spades])), dump["piles"][Suit.Spades.value])
+        self.assertListEqual(dump["undo_stack"], undo_stack)
+
     def test_undo_put(self):
         pass  # TODO: implement
 
