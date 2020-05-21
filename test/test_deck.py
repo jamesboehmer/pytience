@@ -152,8 +152,34 @@ class DeckTestCase(TestCase):
         self.assertEqual(str(Pip.King), 'K')
 
     def test_parse_card(self):
-        for (suit, pip) in product(Suit, Pip):
-            card_string = '{}{}'.format(pip.value, suit.value)
+        for (suit, pip, revealed) in product(Suit, Pip, [True, False]):
+            card_string = '{}{}{}'.format('|' if not revealed else '', pip.value, suit.value)
             card = Card.parse_card(card_string)
             self.assertEqual(card.pip, pip, "The parsed card should have the correct pip.")
             self.assertEqual(card.suit, suit, "The parsed card should have the correct suit.")
+            self.assertEqual(card.is_revealed, revealed, "The parsed card should have the correct reveal state.")
+        for revealed in (True, False):
+            card = Card.parse_card('{}*'.format('|' if not revealed else ''))
+            self.assertIsNone(card.pip, "Joker should have no pip")
+            self.assertIsNone(card.suit, "Joker should have no suit")
+            self.assertEqual(card.is_revealed, revealed, "The parsed card should have the correct reveal state.")
+
+    def test_dump(self):
+        deck = Deck().shuffle()
+        cards = list(map(str, deck.cards))
+        dump = deck.dump()
+        self.assertListEqual(cards, dump["cards"])
+        self.assertEqual(deck.num_decks, dump["num_decks"])
+        self.assertEqual(deck.num_jokers, dump["num_jokers"])
+        self.assertEqual(deck.is_shuffled, dump["is_shuffled"])
+
+    def test_load(self):
+        # TODO move this to an external fixture
+        dump = {"num_decks": 1, "num_jokers": 0, "is_shuffled": True,
+                "cards": ["|10♠", "|4♦", "|4♠", "|J♥", "|2♥", "|7♥", "|5♥", "|A♠", "|5♣", "|Q♠", "|J♠", "|Q♣", "|9♠"]}
+        deck = Deck(deck_dump=dump)
+        self.assertListEqual(list(map(str, deck.cards)), dump["cards"])
+        self.assertEqual(deck.num_decks, dump["num_decks"])
+        self.assertEqual(deck.num_jokers, dump["num_jokers"])
+        self.assertEqual(deck.is_shuffled, dump["is_shuffled"])
+
