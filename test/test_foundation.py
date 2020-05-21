@@ -133,47 +133,14 @@ class FoundationTestCase(TestCase):
 
     def test_undo_put(self):
         foundation = Foundation()
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 0, "New Foundation should be empty.")
-        self.assertEqual(len(foundation.undo_stack), 0, "New Foundation should have an empty undo_stack.")
-
-        # Try putting a card that won't fit
-        with self.assertRaises(IllegalFoundationBuildOrderException,
-                               msg="Should raise exception if the card won't fit in the foundation."):
-            foundation.put(Card(Pip.King, Suit.Diamonds, True))
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 0, "Foundation should still be empty.")
-        self.assertEqual(len(foundation.undo_stack), 0, "Foundation should still have an empty undo_stack.")
-
-        # Try a card that actually fits
-        foundation.put(Card(Pip.Ace, Suit.Diamonds, True))
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 1, "Foundation should have one card.")
-        self.assertEqual(len(foundation.undo_stack), 1, "Foundation should have 1 action in the undo_stack.")
-
-        foundation.undo()
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 0, "Foundation should have no cards.")
-        self.assertEqual(len(foundation.undo_stack), 0, "Foundation should have no actions in the undo_stack.")
+        foundation.piles[Suit.Clubs].append(Card.parse_card("A♣"))
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 1)
+        foundation.undo_put(str(Suit.Clubs))
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 0)
 
     def test_undo_get(self):
         foundation = Foundation()
-        foundation.piles[Suit.Diamonds].append(Card(Pip.Ace, Suit.Diamonds, True))
-
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 1, "Foundation should have one card.")
-        self.assertEqual(len(foundation.undo_stack), 0, "Foundation should have 0 actions in the undo_stack.")
-
-        # Try getting a card from an empty pile
-        with self.assertRaises(NoCardsRemainingException, msg="Should raise exception if the pile is empty."):
-            foundation.get(Suit.Hearts)
-
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 1,
-                         "Foundation should still have one card.")
-        self.assertEqual(len(foundation.undo_stack), 0, "Foundation should still have 0 actions in the undo_stack.")
-
-        card = foundation.get(Suit.Diamonds)
-        self.assertEqual(sum(len(pile) for pile in foundation.piles.values()), 0,
-                         "Foundation should now be empty.")
-        self.assertEqual(len(foundation.undo_stack), 1, "Foundation should now have 1 action in the undo_stack.")
-
-        foundation.undo()
-        self.assertEqual(len(foundation.piles[Suit.Diamonds]), 1, "Diamond Foundation should have 1 card.")
-        self.assertEqual(len(foundation.undo_stack), 0, "Foundation should have no actions in the undo_stack.")
-        self.assertEqual(foundation.piles[Suit.Diamonds][0], card,
-                         "The undone card should be the same that was previously removed.")
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 0)
+        foundation.undo_get("A♣")
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 1)
+        self.assertEqual(str(foundation.piles[Suit.Clubs][0]), "A♣")

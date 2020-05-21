@@ -348,7 +348,7 @@ class KlondikeGameTestCase(TestCase):
             klondike.select_foundation(Suit.Hearts)
 
         # valid pile with fit
-        klondike.foundation.piles[Suit.Hearts][-1] = Card.parse_card("5♥")
+        klondike.foundation.piles[Suit.Hearts] = [Card.parse_card("5♥")]
         self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 1, "Heart pile should have 1 card.")
         self.assertEqual(len(klondike.tableau.piles[3]), 4, "Pile 3 should have 4 cards.")
         klondike.select_foundation(Suit.Hearts, 3)

@@ -18,10 +18,9 @@ class Foundation(Undoable):
             self.piles: Dict[Suit, List[Card]] = {suit: [] for suit in suits}
             super().__init__()
 
-    def undo_get(self, suit: str, card: str):
-        _suit = Suit(suit)
+    def undo_get(self, card: str):
         _card = Card.parse_card(card)
-        pile = self.piles.get(_suit)
+        pile = self.piles.get(_card.suit)
         pile.append(_card)
 
     def get(self, suit: Suit) -> Card:
@@ -32,7 +31,7 @@ class Foundation(Undoable):
             raise NoCardsRemainingException('No foundation cards for suit {}'.format(suit))
 
         card = pile.pop()
-        self.undo_stack.append(UndoAction(self.undo_get, [str(suit), str(card)]))
+        self.undo_stack.append(UndoAction(self.undo_get, [str(card)]))
         return card
 
     def undo_put(self, suit: str):
