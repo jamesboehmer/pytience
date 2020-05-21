@@ -198,10 +198,30 @@ class TableauTestCase(TestCase):
         self.assertListEqual(dump["undo_stack"], undo_stack)
 
     def test_undo_put(self):
-        pass  # TODO: implement
+        tableau = Tableau()
+        cards = ["|4♣", "|6♥", "|8♦", "10♣", "9♦", "8♠", "7♦", "6♠"]
+        tableau.piles[0] = list(map(Card.parse_card, cards))
 
-    def test_undo_get_with_reveal(self):
-        pass  # TODO: implement
+        self.assertEqual(len(tableau.piles[0]), 8)
+        tableau.undo_put(0, 4)
+        self.assertListEqual(list(map(str, tableau.piles[0])), cards[:4])
 
-    def test_undo_get_without_reveal(self):
-        pass  # TODO: implement
+    def test_undo_get(self):
+        tableau = Tableau()
+        remaining_cards = ["|4♣", "|6♥", "|8♦", "10♣"]
+        gotten_card_strings = ["9♦", "8♠", "7♦", "6♠"]
+        tableau.piles[0] = list(map(Card.parse_card, remaining_cards))
+
+        self.assertEqual(len(tableau.piles[0]), 4)
+        self.assertTrue(tableau.piles[0][3].is_revealed)
+
+        # First undo it without re-concealing the top card
+        tableau.undo_get(0, gotten_card_strings, False)
+        self.assertEqual(len(tableau.piles[0]), 8)
+        self.assertTrue(tableau.piles[0][3].is_revealed)
+
+        tableau.piles[0] = list(map(Card.parse_card, remaining_cards))
+        tableau.undo_get(0, gotten_card_strings, True)
+        self.assertEqual(len(tableau.piles[0]), 8)
+        self.assertFalse(tableau.piles[0][3].is_revealed)
+
