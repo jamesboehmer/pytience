@@ -2,7 +2,8 @@ from unittest import TestCase
 from unittest.mock import patch
 import itertools
 
-from pytience.games.solitaire.klondike import KlondikeGame
+from pytience.games.solitaire.klondike import KlondikeGame, POINTS_TABLEAU_FOUNDATION, POINTS_WASTE_TABLEAU, \
+    POINTS_WASTE_FOUNDATION
 from pytience.cards.deck import Card, Pip, Suit
 from pytience.games.exception import IllegalMoveException
 from pytience.cards.exception import NoCardsRemainingException
@@ -347,7 +348,7 @@ class KlondikeGameTestCase(TestCase):
             klondike.select_foundation(Suit.Hearts)
 
         # valid pile with fit
-        klondike.foundation.piles[Suit.Hearts][-1] = Card.parse_card("5♥")
+        klondike.foundation.piles[Suit.Hearts] = [Card.parse_card("5♥")]
         self.assertEqual(len(klondike.foundation.piles[Suit.Hearts]), 1, "Heart pile should have 1 card.")
         self.assertEqual(len(klondike.tableau.piles[3]), 4, "Pile 3 should have 4 cards.")
         klondike.select_foundation(Suit.Hearts, 3)
@@ -467,5 +468,79 @@ class KlondikeGameTestCase(TestCase):
         self.assertTrue(klondike.foundation)
         self.assertTrue(klondike.tableau)
 
-    def test_undo(self):
-        pass  # TODO: implement
+    @patch('pytience.games.solitaire.foundation.Foundation.undo')
+    @patch('pytience.games.solitaire.tableau.Tableau.undo')
+    def test_undo_select_foundation(self, tableau_undo, foundation_undo):
+        klondike = KlondikeGame()
+        self.assertEqual(klondike.score, 0)
+        foundation_undo.assert_not_called()
+        tableau_undo.assert_not_called()
+        klondike.undo_select_foundation()
+        self.assertEqual(klondike.score, POINTS_TABLEAU_FOUNDATION)
+        foundation_undo.assert_called_once()
+        tableau_undo.assert_called_once()
+
+    @patch('pytience.games.solitaire.foundation.Foundation.undo')
+    @patch('pytience.games.solitaire.tableau.Tableau.undo')
+    def test_undo_select_waste(self, tableau_undo, foundation_undo):
+        klondike = KlondikeGame()
+        card_string = "K♣"
+        self.assertEqual(klondike.score, 0)
+        foundation_undo.assert_not_called()
+        tableau_undo.assert_not_called()
+        klondike.undo_select_waste(undo_foundation=True, card_string=card_string)
+        self.assertEqual(klondike.score, -POINTS_WASTE_FOUNDATION)
+        foundation_undo.assert_called_once()
+        tableau_undo.assert_not_called()
+
+        klondike = KlondikeGame()
+        klondike.undo_select_waste(undo_foundation=False, card_string=card_string)
+        self.assertEqual(klondike.score, -POINTS_WASTE_TABLEAU)
+        foundation_undo.assert_called_once()
+        tableau_undo.assert_called_once()
+
+    def test_undo_deal(self):
+        klondike = KlondikeGame()
+        klondike.waste.append(klondike.stock.deal().reveal())
+
+        self.assertEqual(len(klondike.stock.cards), 23)
+        self.assertEqual(len(klondike.waste), 1)
+
+        klondike.undo_deal(undo_replenish=False)
+        self.assertEqual(len(klondike.stock.cards), 24)
+        self.assertEqual(len(klondike.waste), 0)
+
+        klondike.waste.append(klondike.stock.deal().reveal())
+        klondike.undo_deal(undo_replenish=True)
+        self.assertEqual(len(klondike.stock.cards), 0)
+        self.assertEqual(len(klondike.waste), 24)
+
+    @patch('pytience.games.solitaire.foundation.Foundation.undo')
+    @patch('pytience.games.solitaire.tableau.Tableau.undo')
+    def test_undo_seek_tableau_to_foundation(self, tableau_undo, foundation_undo):
+        klondike = KlondikeGame()
+        self.assertEqual(klondike.score, 0)
+        foundation_undo.assert_not_called()
+        tableau_undo.assert_not_called()
+        klondike.undo_seek_tableau_to_foundation()
+        self.assertEqual(klondike.score, -POINTS_TABLEAU_FOUNDATION)
+        foundation_undo.assert_called_once()
+        tableau_undo.assert_called_once()
+
+    @patch('pytience.games.solitaire.foundation.Foundation.undo')
+    @patch('pytience.games.solitaire.tableau.Tableau.undo')
+    def test_undo_select_tableau(self, tableau_undo, foundation_undo):
+        klondike = KlondikeGame()
+        self.assertEqual(klondike.score, 0)
+        foundation_undo.assert_not_called()
+        tableau_undo.assert_not_called()
+
+        klondike.undo_select_tableau(undo_foundation=False)
+        self.assertEqual(klondike.score, 0)
+        foundation_undo.assert_not_called()
+        self.assertEqual(tableau_undo.call_count, 2)
+
+        klondike.undo_select_tableau(undo_foundation=True)
+        self.assertEqual(klondike.score, -POINTS_TABLEAU_FOUNDATION)
+        foundation_undo.assert_called_once()
+        self.assertEqual(tableau_undo.call_count, 3)

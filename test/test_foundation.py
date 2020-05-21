@@ -132,7 +132,15 @@ class FoundationTestCase(TestCase):
         self.assertListEqual(dump["undo_stack"], undo_stack)
 
     def test_undo_put(self):
-        pass  # TODO: implement
+        foundation = Foundation()
+        foundation.piles[Suit.Clubs].append(Card.parse_card("A♣"))
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 1)
+        foundation.undo_put(str(Suit.Clubs))
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 0)
 
     def test_undo_get(self):
-        pass  # TODO: implement
+        foundation = Foundation()
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 0)
+        foundation.undo_get("A♣")
+        self.assertEqual(len(foundation.piles[Suit.Clubs]), 1)
+        self.assertEqual(str(foundation.piles[Suit.Clubs][0]), "A♣")
