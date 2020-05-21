@@ -162,6 +162,41 @@ class TableauTestCase(TestCase):
         result = tableau._conceal(6)
         self.assertFalse(result, "Conceal action should have returned False for a concealed card.")
 
+    def test_dump(self):
+        tableau = Tableau()
+        piles = [
+            ["K♣", "Q♥", "J♣", "10♥", "9♣"],
+            ["K♦"],
+            ["|A♣", "|2♣", "10♦"],
+            [],
+            ["|4♣", "|6♥", "|8♦", "10♣", "9♦", "8♠", "7♦", "6♠"],
+            ["|3♣", "K♠", "Q♦"],
+            ["|9♥", "|5♦", "|3♠", "|7♣", "|8♣", "|K♥", "7♠", "6♦", "5♠", "4♥"]
+        ]
+        tableau.piles = list(map(lambda p: list(map(Card.parse_card, p)), piles))
+        tableau.put(tableau.get(0, 2), 5)
+        self.assertEqual(len(tableau.undo_stack), 2, "There should be exactly 2 undo actions in the tableau.")
+        undo_stack = list(map(lambda u: {'action': u.function.__name__, 'args': u.args}, tableau.undo_stack))
+
+        dump = tableau.dump()
+        self.assertEqual(len(dump["piles"]), len(tableau.piles))
+        for pile_num, tableau_pile in enumerate(tableau.piles):
+            self.assertListEqual(list(map(str, tableau_pile)), dump["piles"][pile_num])
+        self.assertListEqual(dump["undo_stack"], undo_stack)
+
+    def test_load(self):
+        dump = {"piles": [["K♣", "Q♥"], ["K♦"], ["|A♣", "|2♣", "10♦"], [],
+                          ["|4♣", "|6♥", "|8♦", "10♣", "9♦", "8♠", "7♦", "6♠"], ["|3♣", "K♠", "Q♦", "J♣", "10♥", "9♣"],
+                          ["|9♥", "|5♦", "|3♠", "|7♣", "|8♣", "|K♥", "7♠", "6♦", "5♠", "4♥"]],
+                "undo_stack": [{"action": "undo_get", "args": [0, ["J♣", "10♥", "9♣"], False]},
+                               {"action": "undo_put", "args": [5, 3]}]}
+        tableau = Tableau(tableau_dump=dump)
+        undo_stack = list(map(lambda u: {'action': u.function.__name__, 'args': u.args}, tableau.undo_stack))
+        self.assertEqual(len(tableau.piles), len(dump["piles"]))
+        for pile_num, tableau_pile in enumerate(tableau.piles):
+            self.assertListEqual(list(map(str, tableau_pile)), dump["piles"][pile_num])
+        self.assertListEqual(dump["undo_stack"], undo_stack)
+
     def test_undo_put(self):
         pass  # TODO: implement
 
