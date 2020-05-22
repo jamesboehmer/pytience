@@ -11,7 +11,7 @@ with open("README.md", "r") as f:
 
 setup(
     name='pytience',
-    version='0.0.3',
+    version='0.0.4',
     packages=find_packages(exclude=['test']),
     url='https://github.com/jamesboehmer/pytience',
     license='GPLv3',
