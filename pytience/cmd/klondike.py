@@ -48,7 +48,7 @@ class KlondikeCmd(Cmd):
         }
         self.errors = []
         try:
-            self.klondike = self.load()
+            self.klondike = self.load(DEFAULT_SAVE_FILE)
         except FileNotFoundError as _:
             self.klondike = KlondikeGame()
         except Exception as e:  # pylint: disable=broad-except
@@ -169,7 +169,7 @@ class KlondikeCmd(Cmd):
         self.klondike = self.load(filename)
 
     def postcmd(self, stop, line):
-        self.save(self.klondike)
+        self.save(self.klondike, DEFAULT_SAVE_FILE)
         self.print_game()
         return stop
 
