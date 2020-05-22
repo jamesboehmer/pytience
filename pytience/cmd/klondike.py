@@ -141,10 +141,10 @@ class KlondikeCmd(Cmd):
         self.klondike.solve()
 
     @staticmethod
-    def save(klondike, filename=None):
-        # TODO: change serialization to JSON
-        DEFAULT_SAVE_FILE.parent.mkdir(parents=True, exist_ok=True)
-        filename = filename or DEFAULT_SAVE_FILE
+    def save(klondike, filename):
+        if isinstance(filename, str):
+            filename = Path(filename)
+        filename.parent.mkdir(parents=True, exist_ok=True)
         with open(filename, 'w') as f:
             json.dump(klondike.dump(), f)
 
@@ -155,9 +155,9 @@ class KlondikeCmd(Cmd):
         self.save(self.klondike, filename)
 
     @staticmethod
-    def load(filename=None):
-        # TODO: change serialization to JSON
-        filename = filename or DEFAULT_SAVE_FILE
+    def load(filename):
+        if isinstance(filename, str):
+            filename = Path(filename)
         with open(filename, 'r') as f:
             game_dump = json.load(f)
             return KlondikeGame(game_dump=game_dump)
@@ -165,7 +165,8 @@ class KlondikeCmd(Cmd):
     @error_handler
     def do_load(self, line):
         """Usage: load [filename]"""
-        self.klondike = self.load(line)
+        filename = line or DEFAULT_SAVE_FILE
+        self.klondike = self.load(filename)
 
     def postcmd(self, stop, line):
         self.save(self.klondike)
